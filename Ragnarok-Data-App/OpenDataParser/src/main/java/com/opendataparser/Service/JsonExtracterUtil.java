@@ -2,11 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Service;
+package com.opendataparser.Service;
 
-import Configuration.MongoConfig;
-import Enum.ExtracterType;
-import Model.ExtractionMetadata;
+import com.opendataparser.Configuration.MongoConfig;
+import com.opendataparser.Enum.ExtracterType;
+import com.opendataparser.Model.ExtractionMetadata;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -65,7 +65,7 @@ public class JsonExtracterUtil {
         throws MalformedURLException, SocketException, IOException {
             JsonFactory jsonFactory = new JsonFactory();
             mongoUtils.createCollection(extractionMetadata.getCollectionName());
-            MongoCollection<Document> collection = database.getCollection(extractionMetadata.getSourceURL());
+            MongoCollection<Document> collection = database.getCollection(extractionMetadata.getCollectionName());
 
             collection = collection.withWriteConcern(WriteConcern.ACKNOWLEDGED);
             if(extractionMetadata.getExtracterType() == ExtracterType.PRAVNI_AKT_VAZBA){
