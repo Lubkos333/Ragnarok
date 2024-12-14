@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Configuration;
+package com.opendataparser.Configuration;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
