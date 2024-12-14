@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>23</maven.compiler.release>
-        <exec.mainClass>com.rag.opendataparser.OpenDataParser</exec.mainClass>
+        <exec.mainClass>OpenDataParser.OpenDataParser</exec.mainClass>
     </properties>
     <build>
         <plugins>
@@ -16,7 +16,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.rag.opendataparser.OpenDataParser</mainClass>
+                    <mainClass>OpenDataParser.OpenDataParser</mainClass>
                 </configuration>  
                 <executions>
                     <execution>
@@ -34,7 +34,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass><![CDATA[com.rag.opendataparser.OpenDataParser]]></mainClass>
+                            <mainClass><![CDATA[OpenDataParser.OpenDataParser]]></mainClass>
                         </manifest>
                     </archive>
                 </configuration>
