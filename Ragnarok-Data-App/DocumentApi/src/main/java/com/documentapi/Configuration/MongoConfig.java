@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.opendataparser.Configuration;
+package com.documentapi.Configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -24,18 +24,8 @@ public class MongoConfig {
     public String DATABASE;
     @Value("${mongo.collectin.pravniAktZneni}")
     public String MONGO_COLLECTION_AKTY_ZNENI;
-    @Value("${mongo.collectin.pravniAktVazba}")
-    public String MONGO_COLLECTION_AKTY_VAZBA;
     @Value("${mongo.collection.pravniAktFinal}")
     public String MONGO_COLLECTION_AKTY_FINAL;
-    @Value("${mongo.collection.terminy.base}")
-    public String MONGO_COLLECTION_TERMINY_BASE;
-    @Value("${mongo.collection.terminy.popis}")
-    public String MONGO_COLLECTION_TERMINY_POPIS;
-    @Value("${mongo.collection.terminy.vazba}")
-    public String MONGO_COLLECTION_TERMINY_VAZBA;
-    @Value("${mongo.collection.terminy.final}")
-    public String MONGO_COLLECTION_TERMINY_FINAL;
     @Value("${mongo.username}")
     public String USERNAME;
     @Value("${mongo.password}")
