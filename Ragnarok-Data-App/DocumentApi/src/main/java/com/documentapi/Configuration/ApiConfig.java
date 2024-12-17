@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.opendataparser.Configuration;
+package com.documentapi.Configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -14,11 +14,10 @@ import org.springframework.stereotype.Component;
  *
  * @author brune
  */
-
 @Component
 @ConfigurationPropertiesScan
 @EnableAsync
-public class ProcessConfig {    
-    @Value("${processing.thread.number}")
-    public int THREAD_NUMBER;
+public class ApiConfig {
+    @Value("${api.key}")
+    public String apiKey;
 }

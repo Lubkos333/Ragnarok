@@ -1,13 +1,10 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
-package com.opendataparser.Service;
+package com.documentapi.Service;
 
-/**
- *
- * @author brune
- */
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,11 +12,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import java.util.HashSet;
-import java.util.Set;
+import com.mongodb.client.model.Filters;
+import java.util.ArrayList;
+import java.util.List;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +37,11 @@ public class MongoUtils {
      
      private boolean isProcessing = false;
 
-     
+     private final IdFetcherService idFetcher;
      @Autowired
      ObjectMapper objectMapper;
-     public MongoUtils(MongoDatabase database){
+     public MongoUtils(MongoDatabase database,IdFetcherService idFetcher){
+         this.idFetcher = idFetcher;
          this.database = database;
         
      }
@@ -60,7 +58,7 @@ public class MongoUtils {
       public  boolean createCollection(String collectionName) {
         try {
             // Check if the collection already exists
-            dropCollectionIfExists(collectionName);
+             dropCollectionIfExists(collectionName);
             logger.info("Collection '{}' created successfully.", collectionName);
             return true;
         } catch (MongoCommandException e) {
@@ -118,15 +116,47 @@ public class MongoUtils {
     
     
     
-    
-public JsonNode getMongoCollectionAsJson(String collectionName) throws JsonProcessingException {
-    ArrayNode arrayNode = objectMapper.createArrayNode();
-    for (Document doc : getMongoCollection(collectionName).find()) {
-        JsonNode jsonNode = objectMapper.readTree(doc.toJson());
-        arrayNode.add(jsonNode); 
+    public JsonNode getDocumentByDesignation(String collectionName, String designation) throws JsonProcessingException{
+        Document doc = getMongoCollection(collectionName).find(Filters.eq("akt-plné-označení", designation)).first();
+        return objectMapper.readTree(appendLinks(doc).toJson());
     }
-    return arrayNode;
-}
+    
+
+    
+    
+    public JsonNode getMongoCollectionAsJson(String collectionName) throws JsonProcessingException {
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        for (Document doc : getMongoCollection(collectionName).find()) {
+            JsonNode jsonNode = objectMapper.readTree(doc.toJson());
+            arrayNode.add(jsonNode); 
+        }
+        return arrayNode;
+    }
+    
+    public JsonNode getDocumentByID(String collectionName, Integer id) throws JsonProcessingException{
+        Document doc = getMongoCollection(collectionName).find(Filters.eq("znění-dokument-id", id)).first();
+        return objectMapper.readTree(appendLinks(doc).toJson());
+    }
+    
+    
+    
+    private Document appendLinks(Document doc){
+        String pdfId = idFetcher.fetchIdWithRetry(doc.getInteger("znění-dokument-id"), "PDF");
+        String docxId = idFetcher.fetchIdWithRetry(doc.getInteger("znění-dokument-id"), "DOCX");
+        if (pdfId != null) {
+            doc.append("odkaz-stažení-pdf", "https://www.e-sbirka.cz/souborove-sluzby/soubory/" + pdfId);
+        }
+        else{
+             doc.append("odkaz-stažení-pdf", null);
+        }
+        if (docxId != null) {
+            doc.append("odkaz-stažení-docx", "https://www.e-sbirka.cz/souborove-sluzby/soubory/" + docxId);
+        }
+        else{
+           doc.append("odkaz-stažení-docx", null);  
+        }
+        return doc;
+    }
     
      public JsonNode getLinksFromCollection(String collectionName) throws JsonProcessingException{
            ArrayNode arrayNode = objectMapper.createArrayNode();
@@ -179,41 +209,7 @@ public JsonNode getMongoCollectionAsJson(String collectionName) throws JsonProce
      public Integer getCollectionSize(String collection) {
         return (int) getMongoCollection(collection).countDocuments();
     }
-     
-     
-    public Set<Integer> getListOfUniqueZnenBaseIDsForCollection(MongoCollection<Document> sourceCollection){
-        Set<Integer> uniqueIds = new HashSet<>();
-        try (MongoCursor<Document> cursor = sourceCollection.find().iterator()) {
-            int idCount = 0;
-            while (cursor.hasNext()) {
-                Document doc = cursor.next();
-                Integer dokumentId = doc.getInteger("znění-base-id");
-                if (dokumentId != null) {
-                    uniqueIds.add(dokumentId);
-                    idCount++;
-                }
-            }
-        }
-        
-        return uniqueIds;
-    }
-        
-        
-     public Set<Integer> getListOfUniqueZnenDokumentIDsForCollection(MongoCollection<Document> sourceCollection){
-        Set<Integer> uniqueIds = new HashSet<>();
-        try (MongoCursor<Document> cursor = sourceCollection.find().iterator()) {
-            int idCount = 0;
-            while (cursor.hasNext()) {
-                Document doc = cursor.next();
-                Integer dokumentId = doc.getInteger("znění-dokument-id");
-                if (dokumentId != null) {
-                    uniqueIds.add(dokumentId);
-                    idCount++;
-                }
-            }
-        }
-        
-        return uniqueIds;
-    }
+                  
+    
        
 }
