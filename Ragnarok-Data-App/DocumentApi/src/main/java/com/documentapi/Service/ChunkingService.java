@@ -71,6 +71,126 @@ public class ChunkingService {
               }
 
         }
+    
+    
+    public List<Chunk> getParagraphs(String url) throws UnsupportedFileTypeException, IOException, InterruptedException{
+        List<Chunk> chunks = new ArrayList<>();
+          HttpClient httpClient = HttpClient.newHttpClient();
+          HttpRequest request = HttpRequest.newBuilder()
+              .uri(URI.create(url))
+              .build();
+          HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+           InputStream inputStream = response.body();
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+              // Mark the stream to allow resetting after reading the header
+              bufferedInputStream.mark(10);
+
+              // Read the first 8 bytes to determine the file type
+              byte[] header = new byte[8];
+              int bytesRead = bufferedInputStream.read(header, 0, 8);
+
+              // Reset the stream back to the marked position
+              bufferedInputStream.reset();
+
+              String fileType = determineFileType(header, bytesRead);
+
+              if ("DOCX".equals(fileType)) {
+                 return  getParagraphsFromPDF(bufferedInputStream, chunks);
+              } else if ("PDF".equals(fileType)) {
+                 return  getParagraphsFromPDF(bufferedInputStream, chunks);
+              }
+              else{
+                  throw new UnsupportedFileTypeException("file is unsupported");
+              }
+    }
+    
+    public List<Chunk> getParagraphsFromPDF(InputStream inputStream, List<Chunk> chunks) throws IOException{
+
+    try (PDDocument document = PDDocument.load(inputStream)) {
+          String documentTitle = extractPdfTitleFromContent(document);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+
+            // Split text into lines
+            String[] lines = text.split("\\r?\\n");
+
+            String currentSubtitle = null;
+            StringBuilder currentContent = new StringBuilder();
+
+            for (String line : lines) {
+                line = line.trim(); // Remove leading and trailing whitespace
+
+                // Check if the line is a valid chunk delimiter
+                if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
+                    // If there's an existing chunk, add it to the list
+                    if (currentSubtitle != null && currentContent.length() > 0) {
+                        chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+                        currentContent.setLength(0); // Clear content for the next chunk
+                    }
+
+                    // Start a new chunk with the current subtitle
+                    currentSubtitle = line;
+                } else {
+                    // Accumulate content for the current chunk
+                    if (currentContent.length() > 0) {
+                        currentContent.append(" ");
+                    }
+                    currentContent.append(line);
+                }
+            }
+
+            // Add the last chunk if any
+            if (currentSubtitle != null && currentContent.length() > 0) {
+                chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+            }
+        }
+
+        return chunks;
+    }
+
+ 
+    
+    public List<Chunk> getParagraphsFromDOCX(InputStream inputStream, List<Chunk> chunks)throws IOException{
+        
+        try (XWPFDocument document = new XWPFDocument(inputStream)) {
+            List<XWPFParagraph> paragraphs = document.getParagraphs();
+            String documentTitle = extractDocxTitle(document);
+
+            String currentSubtitle = null;
+            StringBuilder currentContent = new StringBuilder();
+
+            for (XWPFParagraph paragraph : paragraphs) {
+                String line = paragraph.getText().trim();
+
+                // Check if the line is a valid chunk delimiter
+                if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
+                    // If there's an existing chunk, add it to the list
+                    if (currentSubtitle != null && currentContent.length() > 0) {
+                        chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+                        currentContent.setLength(0); // Clear content for the next chunk
+                    }
+
+                    // Start a new chunk with the current subtitle
+                    currentSubtitle = line;
+                } else {
+                    // Accumulate content for the current chunk
+                    if (currentContent.length() > 0) {
+                        currentContent.append(" ");
+                    }
+                    currentContent.append(line);
+                }
+            }
+
+            // Add the last chunk if any
+            if (currentSubtitle != null && currentContent.length() > 0) {
+                chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+            }
+        }
+
+        return chunks;
+    }
  
     
     
@@ -169,7 +289,6 @@ public class ChunkingService {
         System.out.println("Finished processing DOCX.");
         return chunks;
     }
-
 
   private List<Chunk> processPdf(InputStream inputStream, List<Chunk> chunks) throws IOException {
         PDDocument document = PDDocument.load(inputStream);
