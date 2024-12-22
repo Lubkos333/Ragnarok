@@ -36,7 +36,7 @@ public class ProcessingController {
   private final ChunkingService chunkingService;   
   private final ControllerHelperService helperService;
   private final MongoUtils mongoUtils;
-
+  
     public ProcessingController(ChunkingService chunkingService, ControllerHelperService helperService, MongoUtils mongoUtils) {
         this.chunkingService = chunkingService;
         this.helperService = helperService;
@@ -67,6 +67,27 @@ public class ProcessingController {
             }
     }
     
-    
+     @GetMapping("/getParagraphs")
+    public ResponseEntity<List<Chunk>> getParagraphs(@RequestHeader("Authorization") String token, @RequestParam("url")String url) {
+            if(mongoUtils.isProcessing()){
+               return new ResponseEntity<>(HttpStatus.PROCESSING); 
+            }
+            if(helperService.isTokenValid(token)){
+                List <Chunk> response;
+                try {
+                    response = chunkingService.getParagraphs(url);
+                } catch (UnsupportedFileTypeException ex) {
+                    Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
+                     return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+                } catch (IOException | InterruptedException ex) {
+                    Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            else{
+               return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+    }
     
 }
