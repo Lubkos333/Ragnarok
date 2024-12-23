@@ -90,7 +90,7 @@ public class ChunkingService {
               String fileType = determineFileType(header, bytesRead);
 
               if ("DOCX".equals(fileType)) {
-                 return  getParagraphsFromPDF(bufferedInputStream, chunks);
+                 return  getParagraphsFromDOCX(bufferedInputStream, chunks);
               } else if ("PDF".equals(fileType)) {
                  return  getParagraphsFromPDF(bufferedInputStream, chunks);
               }
