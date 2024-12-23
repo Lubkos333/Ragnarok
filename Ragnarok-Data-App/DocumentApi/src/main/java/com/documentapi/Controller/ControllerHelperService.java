@@ -19,8 +19,6 @@ public class ControllerHelperService {
     
     String token;
     
-
-    
     ControllerHelperService(ApiConfig apiConfig){
         token = apiConfig.apiKey;
     }
