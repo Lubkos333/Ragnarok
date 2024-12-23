@@ -1,0 +1,25 @@
+port: 7777
+
+server:
+  port: ${port}
+
+spring:
+  ai:
+    embedding:
+      service: ollama
+    ollama:
+      model: Llama3.3
+      init:
+        pull-model-strategy: always
+        embedding:
+          additional-models:
+            - mxbai-embed-large
+            - nomic-embed-text
+        chat:
+          additional-models:
+            - Llama3.3
+      chat:
+        options:
+          model: Llama3.3
+        model: Llama3.3
+      base-url: http://ollama.dyn.cloud.e-infra.cz/
