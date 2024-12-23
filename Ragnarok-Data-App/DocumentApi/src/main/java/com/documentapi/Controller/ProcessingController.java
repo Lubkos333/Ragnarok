@@ -185,18 +185,10 @@ public class ProcessingController {
                      content = @Content(mediaType = "application/json", 
                      schema = @Schema(implementation = Chunk.class),
                      examples = @ExampleObject(value = """
-   [
-     {
-       "title": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách) Ministerstvo dopravy stanoví podle § 137 odst. 2 zákona č. 361/2000 Sb., o provozu na pozemních komunikacích a o změnách některých zákonů (zákon o silničním provozu), ve znění zákona č. 478/2001 Sb., zákona č. 53/2004 Sb., zákona č. 411/2005 Sb., zákona č. 226/2006 Sb., zákona č. 274/2008 Sb., zákona č. 480/2008 Sb., zákona č. 133/2011 Sb. a zákona č. 297/2011 Sb., (dále jen „zákon“) k provedení § 6a odst. 4 zákona:",
-       "subTitle": "§ 1",
-       "content": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách)..."
-     },
-     {
-       "title": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách)...",
-       "subTitle": "§ 2",
-       "content": "Způsob provádění technické silniční kontroly..."
-     }
-   ]
+    {
+         "title": "81 SDĚLENÍ Ministerstva zdravotnictví ze dne 5. ledna 2012 o vydání cenového předpisu 1/2012/DZP o regulaci cen zdravotní péče, stanovení maximálních cen zdravotní péče zubních lékařů hrazené z veřejného zdravotního pojištění, stomatologických výrobků plně hrazených z veřejného zdravotního pojištění a specifických zdravotních výkonů Ministerstvo zdravotnictví podle ustanovení § 10 zákona č. 526/1990 Sb., o cenách, ve znění pozdějších předpisů, sděluje, že dne 14. prosince 2011 vydalo cenový předpis 1/2012/DZP o regulaci cen zdravotní péče, stanovení maximálních cen zdravotní péče zubních lékařů hrazené z veřejného zdravotního pojištění, stomatologických výrobků plně hrazených z veřejného zdravotního pojištění a specifických zdravotních výkonů. Cenový předpis nabyl účinnosti dne 1. ledna 2012 a je publikován ve Věstníku Ministerstva zdravotnictví částka 11 ze dne 29. prosince 2011. Ministr: doc. MUDr. Heger, CSc., v. r. strana 1",
+         "content": "81 SDĚLENÍ Ministerstva zdravotnictví ze dne 5. ledna 2012 o vydání cenového předpisu 1/2012/DZP  o regulaci cen zdravotní péče, stanovení  maximálních cen zdravotní péče zubních  lékařů hrazené z veřejného zdravotního  pojištění, stomatologických výrobků plně  hrazených z veřejného zdravotního  pojištění a specifických zdravotních výkonů Ministerstvo zdravotnictví podle ustanovení § 10 zákona č. 526/1990 Sb., o cenách, ve znění pozdějších  předpisů, sděluje, že dne 14. prosince 2011 vydalo cenový předpis 1/2012/DZP o regulaci cen zdravotní  péče, stanovení maximálních cen zdravotní péče zubních lékařů hrazené z veřejného zdravotního  pojištění, stomatologických výrobků plně hrazených z veřejného zdravotního pojištění a specifických  zdravotních výkonů. Cenový předpis nabyl účinnosti dne 1. ledna 2012 a je publikován ve Věstníku  Ministerstva zdravotnictví částka 11 ze dne 29. prosince 2011. Ministr: doc. MUDr. Heger, CSc., v. r. strana 1 "
+    }
    """))),
         @ApiResponse(responseCode = "202", description = "Processing in progress"),
         @ApiResponse(responseCode = "204", description = "No content available for given url"),
