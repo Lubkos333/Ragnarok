@@ -10,6 +10,7 @@ import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.annotations.Api;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/data")
 @EnableAsync
+@Api(produces = "application/json", value = "Operations for getting documents metadata")
 public class DataController {
     private final MongoUtils mongoUtils;
     private final ControllerHelperService helperService;
