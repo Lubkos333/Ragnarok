@@ -49,14 +49,11 @@ public class ChunkingService {
            InputStream inputStream = response.body();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
-              // Mark the stream to allow resetting after reading the header
               bufferedInputStream.mark(10);
 
-              // Read the first 8 bytes to determine the file type
               byte[] header = new byte[8];
               int bytesRead = bufferedInputStream.read(header, 0, 8);
 
-              // Reset the stream back to the marked position
               bufferedInputStream.reset();
 
               String fileType = determineFileType(header, bytesRead);
@@ -84,14 +81,11 @@ public class ChunkingService {
            InputStream inputStream = response.body();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
-              // Mark the stream to allow resetting after reading the header
               bufferedInputStream.mark(10);
 
-              // Read the first 8 bytes to determine the file type
               byte[] header = new byte[8];
               int bytesRead = bufferedInputStream.read(header, 0, 8);
 
-              // Reset the stream back to the marked position
               bufferedInputStream.reset();
 
               String fileType = determineFileType(header, bytesRead);
@@ -113,35 +107,27 @@ public class ChunkingService {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
-            // Split text into lines
             String[] lines = text.split("\\r?\\n");
 
             String currentSubtitle = null;
             StringBuilder currentContent = new StringBuilder();
 
             for (String line : lines) {
-                line = line.trim(); // Remove leading and trailing whitespace
+                line = line.trim(); 
 
-                // Check if the line is a valid chunk delimiter
                 if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
-                    // If there's an existing chunk, add it to the list
                     if (currentSubtitle != null && currentContent.length() > 0) {
                         chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
-                        currentContent.setLength(0); // Clear content for the next chunk
+                        currentContent.setLength(0);
                     }
-
-                    // Start a new chunk with the current subtitle
                     currentSubtitle = line;
                 } else {
-                    // Accumulate content for the current chunk
                     if (currentContent.length() > 0) {
                         currentContent.append(" ");
                     }
                     currentContent.append(line);
                 }
             }
-
-            // Add the last chunk if any
             if (currentSubtitle != null && currentContent.length() > 0) {
                 chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
             }
@@ -163,19 +149,14 @@ public class ChunkingService {
 
             for (XWPFParagraph paragraph : paragraphs) {
                 String line = paragraph.getText().trim();
-
-                // Check if the line is a valid chunk delimiter
+                
                 if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
-                    // If there's an existing chunk, add it to the list
                     if (currentSubtitle != null && currentContent.length() > 0) {
                         chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
-                        currentContent.setLength(0); // Clear content for the next chunk
+                        currentContent.setLength(0); 
                     }
-
-                    // Start a new chunk with the current subtitle
                     currentSubtitle = line;
                 } else {
-                    // Accumulate content for the current chunk
                     if (currentContent.length() > 0) {
                         currentContent.append(" ");
                     }
@@ -183,7 +164,6 @@ public class ChunkingService {
                 }
             }
 
-            // Add the last chunk if any
             if (currentSubtitle != null && currentContent.length() > 0) {
                 chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
             }
@@ -210,11 +190,9 @@ public class ChunkingService {
     }
 
  private List<Chunk> processDocx(InputStream inputStream, List<Chunk> chunks) throws IOException {
-        // Extract the document title
         XWPFDocument document = new XWPFDocument(inputStream);
   System.out.println("DOCX document loaded.");
 
-        // Extract the document title
         String documentTitle = extractDocxTitle(document);
         System.out.println("Extracted document title: " + documentTitle);
 
@@ -231,13 +209,12 @@ public class ChunkingService {
             System.out.println("Paragraph " + i + ": " + text);
 
             if (text.isEmpty()) {
-                continue; // Skip empty paragraphs
+                continue; 
             }
 
             Matcher matcher = sectionPattern.matcher(text);
             if (matcher.matches()) {
                 System.out.println("Found section: " + text);
-                // Process the previous chunk if any
                 if (contentBuilder.length() > 0 && currentSubtitle != null) {
                     String content = contentBuilder.toString().trim();
                     Chunk chunk = new Chunk(documentTitle, currentSubtitle, content);
@@ -246,13 +223,11 @@ public class ChunkingService {
                     contentBuilder.setLength(0);
                 }
 
-                // Extract subtitle from the same line if present
                 String subtitle = matcher.group(2);
                 if (subtitle != null && !subtitle.isEmpty()) {
                     currentSubtitle = subtitle.trim();
                     System.out.println("Detected subtitle on the same line: " + currentSubtitle);
                 } else {
-                    // If no subtitle on the same line, check the next non-empty line
                     while (i + 1 < paragraphs.size()) {
                         XWPFParagraph nextPara = paragraphs.get(i + 1);
                         String nextText = nextPara.getText().trim();
@@ -260,26 +235,23 @@ public class ChunkingService {
                             if (isLikelySubtitle(nextPara)) {
                                 currentSubtitle = nextText;
                                 System.out.println("Detected subtitle on the next line: " + currentSubtitle);
-                                i++; // Move to the next paragraph after subtitle
+                                i++;
                             } else {
-                                // Next line is not a subtitle; keep currentSubtitle unchanged
                                 System.out.println("Next line is not a subtitle: " + nextText);
                             }
                             break;
                         }
-                        i++; // Skip empty paragraphs
+                        i++;
                     }
                     if (currentSubtitle == null) {
                         currentSubtitle = "No Subtitle";
                     }
                 }
             } else {
-                // Accumulate content
                 contentBuilder.append(text).append(" ");
             }
         }
 
-        // Process any remaining content
         if (contentBuilder.length() > 0 && currentSubtitle != null) {
             String content = contentBuilder.toString().trim();
             Chunk chunk = new Chunk(documentTitle, currentSubtitle, content);
@@ -294,7 +266,6 @@ public class ChunkingService {
         PDDocument document = PDDocument.load(inputStream);
      System.out.println("PDF document loaded.");
 
-        // Extract the document title
         String documentTitle = extractPdfTitleFromContent(document);
         System.out.println("Extracted document title: " + documentTitle);
 
@@ -302,7 +273,6 @@ public class ChunkingService {
         String text = stripper.getText(document);
         System.out.println("Extracted text from PDF.");
 
-        // Split text into lines
         String[] lines = text.split("\\r?\\n");
         System.out.println("Total lines: " + lines.length);
 
@@ -315,13 +285,12 @@ public class ChunkingService {
             System.out.println("Line " + i + ": " + line);
 
             if (line.isEmpty()) {
-                continue; // Skip empty lines
+                continue; 
             }
 
             Matcher matcher = sectionPattern.matcher(line);
             if (matcher.matches()) {
                 System.out.println("Found section: " + line);
-                // Process the previous chunk if any
                 if (contentBuilder.length() > 0 && currentSubtitle != null) {
                     String content = contentBuilder.toString().trim();
                     Chunk chunk = new Chunk(documentTitle, currentSubtitle, content);
@@ -330,13 +299,11 @@ public class ChunkingService {
                     contentBuilder.setLength(0);
                 }
 
-                // Extract subtitle from the same line if present
                 String subtitle = matcher.group(2);
                 if (subtitle != null && !subtitle.isEmpty()) {
                     currentSubtitle = subtitle.trim();
                     System.out.println("Detected subtitle on the same line: " + currentSubtitle);
                 } else {
-                    // If no subtitle on the same line, check the next non-empty line
                     while (i + 1 < lines.length) {
                         String nextLine = lines[i + 1].trim();
                         if (!nextLine.isEmpty()) {
@@ -345,22 +312,20 @@ public class ChunkingService {
                              } 
       
                             System.out.println("Detected subtitle on the next line: " + currentSubtitle);
-                            i++; // Move to the next line after subtitle
+                            i++; 
                             break;
                         }
-                        i++; // Skip empty lines
+                        i++;
                     }
                     if (currentSubtitle == null) {
                         currentSubtitle = "No Subtitle";
                     }
                 }
             } else {
-                // Accumulate content
                 contentBuilder.append(line).append(" ");
             }
         }
 
-        // Process any remaining content
         if (contentBuilder.length() > 0 && currentSubtitle != null) {
             String content = contentBuilder.toString().trim();
             Chunk chunk = new Chunk(documentTitle, currentSubtitle, content);
@@ -371,14 +336,11 @@ public class ChunkingService {
         return chunks;
   }
   
- // Helper method to determine if a line is a subtitle
 private static boolean isSubtitle(String text) {
-    // Check if the text is in uppercase and of reasonable length
     if (text.equals(text.toUpperCase()) && text.length() > 3 && text.length() < 100) {
         return true;
     }
 
-    // Check if the text matches specific keywords (add your own as needed)
     String[] subtitleKeywords = { "ČÁST", "HLAVA", "DÍL", "ODDÍL", "PŘECHODNÁ USTANOVENÍ", "ZÁVĚREČNÁ USTANOVENÍ",
                                   "Předmět zákona", "Základní pojmy", "Veřejná hydrometeorologická služba" };
     for (String keyword : subtitleKeywords) {
@@ -393,7 +355,6 @@ private static boolean isSubtitle(String text) {
 private static boolean isSubtitle(XWPFParagraph para) {
     String text = para.getText().trim();
 
-    // Check paragraph style
     String style = para.getStyle();
     if (style != null) {
         System.out.println("Paragraph style: " + style);
@@ -402,12 +363,10 @@ private static boolean isSubtitle(XWPFParagraph para) {
         }
     }
 
-    // Check if the text is in uppercase and of reasonable length
     if (text.equals(text.toUpperCase()) && text.length() > 3 && text.length() < 100) {
         return true;
     }
 
-    // Check for specific keywords
     String[] subtitleKeywords = { "ČÁST", "HLAVA", "DÍL", "ODDÍL",
         "PŘECHODNÁ USTANOVENÍ", "ZÁVĚREČNÁ USTANOVENÍ",
         "Předmět úpravy", "Základní pojmy", "Veřejná hydrometeorologická služba" };
@@ -426,17 +385,14 @@ private static boolean isLikelySubtitle(String text) {
         return false;
     }
 
-    // Exclude lines starting with numbering like (1), 1., a), etc.
     if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
         return false;
     }
 
-    // Check if text is in uppercase
     if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
         return true;
     }
 
-    // Check if text doesn't end with a period (likely not a sentence)
     if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
         return true;
     }
@@ -451,12 +407,10 @@ private static String extractPdfTitleFromContent(PDDocument document) throws IOE
     stripper.setEndPage(1);
     String text = stripper.getText(document);
 
-    // Split the text into lines
     String[] lines = text.split("\\r?\\n");
 
     StringBuilder titleBuilder = new StringBuilder();
 
-    // Collect lines until we reach the first "§" or an empty line
     for (String line : lines) {
         line = line.trim();
         if (line.isEmpty() || line.startsWith("§")) {
@@ -484,7 +438,6 @@ private static boolean isLikelySubtitle(XWPFParagraph para) {
         return false;
     }
 
-    // Exclude lines starting with numbering like (1), 1., a), etc.
     if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
         return false;
     }
@@ -497,12 +450,10 @@ private static boolean isLikelySubtitle(XWPFParagraph para) {
         }
     }
 
-    // Check if text is in uppercase
     if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
         return true;
     }
 
-    // Check if text doesn't end with a period (likely not a sentence)
     if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
         return true;
     }
@@ -521,7 +472,6 @@ private static String extractDocxTitle(XWPFDocument document) {
     documentTitle = coreProps.getTitle();
 
     if (documentTitle == null || documentTitle.isEmpty()) {
-        // Use the first few paragraphs as the title until an empty paragraph or "§" is encountered
         StringBuilder titleBuilder = new StringBuilder();
         for (XWPFParagraph para : document.getParagraphs()) {
             String text = para.getText().trim();

@@ -11,6 +11,7 @@ import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
 import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/processing")
 @EnableAsync
+@Api(produces = "application/json", value = "Operations for processing documents")
 public class ProcessingController {
   private final ChunkingService chunkingService;   
   private final ControllerHelperService helperService;
@@ -43,7 +45,7 @@ public class ProcessingController {
         this.mongoUtils = mongoUtils;
     }
 
-  
+
     @GetMapping("/getChunks")
     public ResponseEntity<List<Chunk>> getChunks(@RequestHeader("Authorization") String token, @RequestParam("url")String url) {
             if(mongoUtils.isProcessing()){
