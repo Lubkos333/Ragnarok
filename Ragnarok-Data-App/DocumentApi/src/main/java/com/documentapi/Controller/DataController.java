@@ -6,6 +6,7 @@
 package com.documentapi.Controller;
 
 import com.documentapi.Configuration.MongoConfig;
+import com.documentapi.Exception.DocumentNotFoundException;
 import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -90,7 +91,7 @@ public class DataController {
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                }
+                } 
             }
             else{
                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -109,7 +110,7 @@ public class DataController {
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                } catch (Exception ex) {
+                } catch (DocumentNotFoundException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
@@ -131,7 +132,7 @@ public class DataController {
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                } catch (Exception ex) {
+                } catch (DocumentNotFoundException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
@@ -153,7 +154,7 @@ public class DataController {
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                } catch (Exception ex) {
+                } catch (DocumentNotFoundException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
