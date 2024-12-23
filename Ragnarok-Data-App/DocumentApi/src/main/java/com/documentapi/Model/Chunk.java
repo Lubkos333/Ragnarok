@@ -9,26 +9,13 @@ package com.documentapi.Model;
  *
  * @author brune
  */
-public class Chunk {
-    private String title; // Document title
-    private String subTitle; // Current subtitle
-    private String content; // Paragraph content
-
-    // Constructors
-    public Chunk() {}
+public class Chunk extends CompleteDocument {
+    private String subTitle;
 
     public Chunk(String title, String subTitle, String content) {
-        this.title = title;
+        super(title,content);
         this.subTitle = subTitle;
-        this.content = content;
-    }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getSubTitle() {
@@ -39,11 +26,4 @@ public class Chunk {
         this.subTitle = subTitle;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 }
