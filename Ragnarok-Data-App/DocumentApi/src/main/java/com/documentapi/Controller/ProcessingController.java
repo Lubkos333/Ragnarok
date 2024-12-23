@@ -11,6 +11,7 @@ package com.documentapi.Controller;
 import com.documentapi.Exception.DocumentNotFoundException;
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
+import com.documentapi.Model.CompleteDocument;
 import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
 import io.swagger.annotations.Api;
@@ -155,6 +156,67 @@ public class ProcessingController {
                 List <Chunk> response;
                 try {
                     response = chunkingService.getParagraphs(url);
+                } catch (UnsupportedFileTypeException ex) {
+                    Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
+                     return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                catch (IOException ex) {
+                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                }
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            else{
+               return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+    }
+    
+    
+    
+    @Operation(
+        summary = "Get document content",
+        description = "Extracts complete content from document at the given URL. Works with DOCX and PDF links. Requires a valid authorization token."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Content extracted successfully",
+                     content = @Content(mediaType = "application/json", 
+                     schema = @Schema(implementation = Chunk.class),
+                     examples = @ExampleObject(value = """
+   [
+     {
+       "title": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách) Ministerstvo dopravy stanoví podle § 137 odst. 2 zákona č. 361/2000 Sb., o provozu na pozemních komunikacích a o změnách některých zákonů (zákon o silničním provozu), ve znění zákona č. 478/2001 Sb., zákona č. 53/2004 Sb., zákona č. 411/2005 Sb., zákona č. 226/2006 Sb., zákona č. 274/2008 Sb., zákona č. 480/2008 Sb., zákona č. 133/2011 Sb. a zákona č. 297/2011 Sb., (dále jen „zákon“) k provedení § 6a odst. 4 zákona:",
+       "subTitle": "§ 1",
+       "content": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách)..."
+     },
+     {
+       "title": "82 VYHLÁŠKA ze dne 6. března 2012 o provádění kontrol technického stavu vozidel a jízdních souprav v provozu na pozemních komunikacích (vyhláška o technických silničních kontrolách)...",
+       "subTitle": "§ 2",
+       "content": "Způsob provádění technické silniční kontroly..."
+     }
+   ]
+   """))),
+        @ApiResponse(responseCode = "202", description = "Processing in progress"),
+        @ApiResponse(responseCode = "204", description = "No content available for given url"),
+        @ApiResponse(responseCode = "415", description = "Unsupported media type"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/getCompleteDocument")
+    public ResponseEntity<CompleteDocument> getCompleteDocument(
+        @Parameter(description = "Authorization token", example = "testApiKey") 
+        @RequestHeader("Authorization") String token,
+        @Parameter(description = "URL of the document", example = "https://www.e-sbirka.cz/souborove-sluzby/soubory/0492bcf7-9d99-4e86-be4b-f33c1616d373") 
+        @RequestParam("url") String url) {
+            if(mongoUtils.isProcessing()){
+               return new ResponseEntity<>(HttpStatus.PROCESSING); 
+            }
+            if(helperService.isTokenValid(token)){
+                CompleteDocument response;
+                try {
+                    response = chunkingService.getContent(url);
                 } catch (UnsupportedFileTypeException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);

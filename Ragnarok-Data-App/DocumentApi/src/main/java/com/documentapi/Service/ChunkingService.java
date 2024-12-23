@@ -7,6 +7,7 @@ package com.documentapi.Service;
 
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
+import com.documentapi.Model.CompleteDocument;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,6 +99,66 @@ public class ChunkingService {
                   throw new UnsupportedFileTypeException("file is unsupported");
               }
     }
+    
+    
+    public CompleteDocument getContent(String url) throws UnsupportedFileTypeException, IOException, InterruptedException{
+          HttpClient httpClient = HttpClient.newHttpClient();
+          HttpRequest request = HttpRequest.newBuilder()
+              .uri(URI.create(url))
+              .build();
+          HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+           InputStream inputStream = response.body();
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+              bufferedInputStream.mark(10);
+
+              byte[] header = new byte[8];
+              int bytesRead = bufferedInputStream.read(header, 0, 8);
+
+              bufferedInputStream.reset();
+
+              String fileType = determineFileType(header, bytesRead);
+
+              if ("DOCX".equals(fileType)) {
+                 return  getCompleteDocumentFromDOCX(bufferedInputStream);
+              } else if ("PDF".equals(fileType)) {
+                 return  getCompleteDocumentFromPDF(bufferedInputStream);
+              }
+              else{
+                  throw new UnsupportedFileTypeException("file is unsupported");
+              }
+    }
+    
+    
+    
+    public CompleteDocument getCompleteDocumentFromPDF(InputStream inputStream) throws IOException{
+        try (PDDocument document = PDDocument.load(inputStream)) {
+            String documentTitle = extractPdfTitleFromContent(document);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+            text = text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ");
+            return new CompleteDocument(documentTitle, text);
+        }
+        
+    }
+    
+    
+    public CompleteDocument getCompleteDocumentFromDOCX(InputStream inputStream) throws IOException{
+        try (XWPFDocument document = new XWPFDocument(inputStream)) {
+            List<XWPFParagraph> paragraphs = document.getParagraphs();
+            String documentTitle = extractDocxTitle(document);
+            StringBuilder contentBuilder = new StringBuilder();
+            for (XWPFParagraph paragraph : paragraphs) {
+                String text = paragraph.getText().trim();
+                if (!text.isEmpty()) {
+                    contentBuilder.append(text).append(" ");
+                }
+            }
+            return new CompleteDocument(documentTitle, contentBuilder.toString().trim());
+        }
+    }
+    
     
     public List<Chunk> getParagraphsFromPDF(InputStream inputStream, List<Chunk> chunks) throws IOException{
 
