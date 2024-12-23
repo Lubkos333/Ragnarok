@@ -5,6 +5,8 @@
  */
 package com.documentapi.Service;
 
+
+import com.documentapi.Exception.DocumentNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,7 +118,7 @@ public class MongoUtils {
     
     
     
-    public JsonNode getDocumentByDesignation(String collectionName, String designation) throws JsonProcessingException{
+    public JsonNode getDocumentByDesignation(String collectionName, String designation) throws JsonProcessingException, DocumentNotFoundException{
         Document doc = getMongoCollection(collectionName).find(Filters.eq("akt-plné-označení", designation)).first();
         return objectMapper.readTree(appendLinks(doc).toJson());
     }
@@ -133,14 +135,17 @@ public class MongoUtils {
         return arrayNode;
     }
     
-    public JsonNode getDocumentByID(String collectionName, Integer id) throws JsonProcessingException{
+    public JsonNode getDocumentByID(String collectionName, Integer id) throws JsonProcessingException, DocumentNotFoundException{
         Document doc = getMongoCollection(collectionName).find(Filters.eq("znění-dokument-id", id)).first();
         return objectMapper.readTree(appendLinks(doc).toJson());
     }
     
     
     
-    private Document appendLinks(Document doc){
+    private Document appendLinks(Document doc) throws DocumentNotFoundException{
+        if(doc == null){
+            throw new DocumentNotFoundException("Document not found");
+        }
         String pdfId = idFetcher.fetchIdWithRetry(doc.getInteger("znění-dokument-id"), "PDF");
         String docxId = idFetcher.fetchIdWithRetry(doc.getInteger("znění-dokument-id"), "DOCX");
         if (pdfId != null) {
@@ -191,7 +196,7 @@ public class MongoUtils {
     */
     
     
-     public JsonNode getMetadataByLink(String collectionName,String link) throws Exception{
+     public JsonNode getMetadataByLink(String collectionName,String link) throws DocumentNotFoundException, JsonProcessingException {
         MongoCollection<Document> collection = getMongoCollection(collectionName);
 
         Document doc = collection.find(new Document("odkaz-stažení-pdf", link)).first();
@@ -201,7 +206,7 @@ public class MongoUtils {
         }
 
         if (doc == null) {
-            throw new Exception("Document not found by either 'odkaz-stažení-pdf' or 'odkaz-stažení-docx'");
+            throw new DocumentNotFoundException("Document not found by either 'odkaz-stažení-pdf' or 'odkaz-stažení-docx'");
         }
         return objectMapper.readTree(doc.toJson());
     }
