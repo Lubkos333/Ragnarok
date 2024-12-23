@@ -7,6 +7,8 @@ package com.documentapi.Controller;
 
 
 
+
+import com.documentapi.Exception.DocumentNotFoundException;
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
 import com.documentapi.Service.ChunkingService;
@@ -58,9 +60,13 @@ public class ProcessingController {
                 } catch (UnsupportedFileTypeException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-                } catch (IOException | InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                catch (IOException ex) {
+                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
@@ -81,9 +87,13 @@ public class ProcessingController {
                 } catch (UnsupportedFileTypeException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-                } catch (IOException | InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                catch (IOException ex) {
+                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
