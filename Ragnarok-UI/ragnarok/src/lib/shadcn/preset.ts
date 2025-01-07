@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { shadcnPlugin } from "./shadcn-plugin";
+import { shadcnPlugin } from "./plugin";
 import animatePlugin from "tailwindcss-animate";
 
 export const shadcnPreset = {
