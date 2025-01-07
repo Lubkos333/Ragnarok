@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { shadcnPreset } from "./src/lib/shadcn-preset";
+import { shadcnPreset } from "./src/lib/shadcn/preset";
 
 export default {
   presets: [shadcnPreset],
