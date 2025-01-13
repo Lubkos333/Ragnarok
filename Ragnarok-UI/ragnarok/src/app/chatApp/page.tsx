@@ -5,7 +5,8 @@ import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWindow } from "@/components/chat/chat-window";
 import { OnboardingModal } from "@/components/chat/onboarding-modal";
 import { useOnboardingStore } from "@/lib/stores/onBoardingStore";
-import { mockChatApi } from "@/services/api/chatApi";
+import { chatApi } from "@/services/api/chatApi";
+import { ChatWebSocket } from "@/services/websocket";
 
 const commonQuestions = [
   "Jaká jsou základní práva zaměstnanců v České republice?",
@@ -25,6 +26,7 @@ const ChatApp = () => {
 
   const showOnboarding = useOnboardingStore((state) => state.showOnboarding);
   const setOnboarding = useOnboardingStore((state) => state.setOnboarding);
+  const ws = ChatWebSocket.getInstance();
 
   return (
     <div className="flex-1 flex flex-col w-full bg-secondary">
@@ -44,7 +46,7 @@ const ChatApp = () => {
                   const title = message.slice(0, 20);
                   createChat(title);
                   sendMessage(message);
-                  mockChatApi(message).then((response) => {
+                  chatApi(ws ,message).then((response) => {
                     sendMessage(response.response, true);
                   });
                 }
@@ -60,7 +62,7 @@ const ChatApp = () => {
                     const title = message.slice(0, 20);
                     createChat(title);
                     sendMessage(message);
-                    mockChatApi(message).then((response) => {
+                    chatApi(ws, message).then((response) => {
                       sendMessage(response.response, true);
                     });
                   }}
@@ -73,7 +75,7 @@ const ChatApp = () => {
             </div>
           </div>
         ) : (
-          <ChatWindow />
+          <ChatWindow ws={ws}/>
         )}
       </main>
       <OnboardingModal
