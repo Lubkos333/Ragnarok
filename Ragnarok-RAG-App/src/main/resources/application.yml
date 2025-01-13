@@ -5,6 +5,16 @@ server:
 
 spring:
   ai:
+    #vectorstore:
+    #  chroma:
+    #    client:
+    #      host: http://is-vector-db.dyn.cloud.e-infra.cz
+    #      port: 80
+    #      #key-token: <your access token (if configure)>
+    #      username: <your username (if configure)>
+    #      password: <your password (if configure)>
+    #    initialize-schema: true
+    #    collection-name: default_collection
     embedding:
       service: ollama
     ollama:
@@ -13,7 +23,7 @@ spring:
         pull-model-strategy: always
         embedding:
           additional-models:
-            - mxbai-embed-large
+            #- mxbai-embed-large
             - nomic-embed-text
         chat:
           additional-models:
