@@ -5,10 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ThumbsUp, ThumbsDown, ListRestart } from "lucide-react";
-import { mockChatApi } from "@/services/api/chatApi";
+import { chatApi } from "@/services/api/chatApi";
 import { useChatStore } from "@/lib/stores/chatStore";
+import { ChatWebSocket } from "@/services/websocket";
 
-export function ChatWindow() {
+export interface ChatWindowProps {
+  ws: ChatWebSocket;
+}
+
+export function ChatWindow(props: ChatWindowProps) {
+  const { ws } = props;
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const sendMessage = useChatStore((state) => state.sendMessage);
@@ -22,11 +28,11 @@ export function ChatWindow() {
     if (input.trim()) {
       sendMessage(input);
       setIsTyping(true);
-      mockChatApi(input).then((response) => {
+      chatApi(ws, input).then((response) => {
         setInput("");
         setIsTyping(false);
         sendMessage(response.response, true);
-      });
+      })
     }
   };
 
