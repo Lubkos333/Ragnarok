@@ -27,7 +27,7 @@ const ChatApp = () => {
   const setOnboarding = useOnboardingStore((state) => state.setOnboarding);
 
   return (
-    <div className="flex-1 flex flex-col w-full bg-secondary">
+    <div className="flex-1 flex flex-col w-full bg-muted">
       <main className="flex-1 p-6 justify-center items-center flex">
         {!activeChatId ? (
           <div className="max-w-2xl mx-auto space-y-6">
@@ -37,7 +37,7 @@ const ChatApp = () => {
             </p>
             <Input
               placeholder="Zde napište svůj dotaz..."
-              className="max-w-xl mx-auto"
+              className="max-w-xl mx-auto text-foreground hover:outline-none hover:ring-1 hover:ring-ring hover:ring-offset-2"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const message = (e.target as HTMLInputElement).value;
@@ -54,7 +54,7 @@ const ChatApp = () => {
               {commonQuestions.map((question, index) => (
                 <Card
                   key={index}
-                  className="cursor-pointer hover:bg-accent"
+                  className="cursor-pointer ring-offset-background hover:outline-none hover:ring-1 hover:ring-ring hover:ring-offset-2"
                   onClick={() => {
                     const message = question;
                     const title = message.slice(0, 20);

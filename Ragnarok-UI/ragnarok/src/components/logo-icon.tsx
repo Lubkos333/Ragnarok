@@ -4,8 +4,6 @@ import { SVGProps } from "react";
 const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     className={`LogoIcon ${props.className}`}
-    width={1400}
-    height={1400}
     viewBox="0 0 14000 14000"
     xmlns="http://www.w3.org/2000/svg"
     {...props}
