@@ -12,6 +12,7 @@ import { MessageSquareMore, PlusCircle } from "lucide-react";
 import { Chat } from "@/types/chat.interface";
 
 import { useChatStore } from "@/lib/stores/chatStore";
+import { Separator } from "@radix-ui/react-separator";
 
 export function ChatSection({ chats }: { chats: Chat[] }) {
   const setActiveChat = useChatStore((state) => state.setActiveChat);
@@ -26,6 +27,7 @@ export function ChatSection({ chats }: { chats: Chat[] }) {
             Nový Chat
           </SidebarMenuButton>
         </SidebarMenuItem>
+        <Separator />
         {chats.map((chat) => (
           <SidebarMenuItem key={chat.id}>
             <SidebarMenuButton
