@@ -44,20 +44,31 @@ export function ChatWindow() {
               className={`inline-block p-2 rounded-lg ${
                 message.sender === "user"
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+                  : "bg-background text-foreground"
               }`}
             >
               {message.text}
             </div>
             {message.sender === "ragnarok" && (
               <div className="mt-1 flex justify-start space-x-2">
-                <Button variant="ghost" size="icon" title="Kladné hodnocení">
+                <Button
+                  className=" hover:bg-background"
+                  variant="ghost"
+                  size="icon"
+                  title="Kladné hodnocení"
+                >
                   <ThumbsUp className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" title="Záporné hodnocení">
+                <Button
+                  className=" hover:bg-background"
+                  variant="ghost"
+                  size="icon"
+                  title="Záporné hodnocení"
+                >
                   <ThumbsDown className="h-4 w-4" />
                 </Button>
                 <Button
+                  className=" hover:bg-background"
                   variant="ghost"
                   size="icon"
                   title="Znovu vygenerovat odpověď"
