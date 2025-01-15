@@ -46,7 +46,7 @@ const ChatApp = () => {
                   const title = message.slice(0, 20);
                   createChat(title);
                   sendMessage(message);
-                  chatApi(ws ,message).then((response) => {
+                  chatApi(ws, message).then((response) => {
                     sendMessage(response.response, true);
                   });
                 }
@@ -75,7 +75,7 @@ const ChatApp = () => {
             </div>
           </div>
         ) : (
-          <ChatWindow ws={ws}/>
+          <ChatWindow ws={ws} />
         )}
       </main>
       <OnboardingModal
