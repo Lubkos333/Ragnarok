@@ -8,14 +8,16 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
 } from "@/components/ui/sidebar";
-import { MessageSquareMore, PlusCircle } from "lucide-react";
+import { MessageSquareMore, PlusCircle, Trash2 } from "lucide-react";
 import { Chat } from "@/types/chat.interface";
 
 import { useChatStore } from "@/lib/stores/chatStore";
 import { Separator } from "@radix-ui/react-separator";
+import { Button } from "@/components/ui/button";
 
 export function ChatSection({ chats }: { chats: Chat[] }) {
   const setActiveChat = useChatStore((state) => state.setActiveChat);
+  const deleteChat = useChatStore((state) => state.deleteChat);
 
   return (
     <SidebarGroup>
@@ -27,7 +29,7 @@ export function ChatSection({ chats }: { chats: Chat[] }) {
             Nový Chat
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <Separator />
+        <Separator className="h-[1px] my-2 bg-muted" />
         {chats.map((chat) => (
           <SidebarMenuItem key={chat.id}>
             <SidebarMenuButton
@@ -37,6 +39,14 @@ export function ChatSection({ chats }: { chats: Chat[] }) {
             >
               <MessageSquareMore />
               {chat.title}
+              <Button
+                onClick={() => {
+                  deleteChat(chat.id);
+                }}
+                className="p-1 bg-transparent ml-auto text-secondary hover:text-destructive"
+              >
+                <Trash2 />
+              </Button>
             </SidebarMenuButton>
             <SidebarMenuSub />
           </SidebarMenuItem>
