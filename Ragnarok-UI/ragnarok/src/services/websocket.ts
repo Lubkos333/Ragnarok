@@ -4,7 +4,7 @@ export class ChatWebSocket {
 
   // ToDo: connect to real WebSocket server
   private constructor() {
-    this.socket = new WebSocket("ws://localhost:3000/ws/chat");
+    this.socket = new WebSocket(`ws://${process.env.NEXT_PUBLIC_RAGNAROK_UI_URL}/ws/chat`);
     this.socket.onopen = () => console.log("WebSocket connected");
     this.socket.onclose = () => console.log("WebSocket disconnected");
     this.socket.onerror = (error) => console.error("WebSocket error:", error);
