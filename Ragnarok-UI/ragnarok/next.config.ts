@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/ws/chat", 
-        destination: "http://localhost:7777/ws/chat",
+        destination: `${process.env.NEXT_PUBLIC_RAGNAROK_APP_URL}/ws/chat`,
       },
     ];
   },
