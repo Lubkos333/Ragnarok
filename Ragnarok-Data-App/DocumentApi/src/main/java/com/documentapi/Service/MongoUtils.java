@@ -18,7 +18,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +123,64 @@ public class MongoUtils {
     public JsonNode getDocumentByDesignation(String collectionName, String designation) throws JsonProcessingException, DocumentNotFoundException{
         Document doc = getMongoCollection(collectionName).find(Filters.eq("akt-plné-označení", designation)).first();
         return objectMapper.readTree(appendLinks(doc).toJson());
+    }
+    
+    public JsonNode getRelatedDocuments(String collectionName, Integer id)  throws JsonProcessingException, DocumentNotFoundException {
+        Document baseDoc = getMongoCollection(collectionName)
+            .find(Filters.eq("znění-dokument-id", id))
+            .first();
+
+        if (baseDoc == null) {
+            return new ObjectMapper().createArrayNode();
+        }
+
+        Integer zneniBaseId = baseDoc.getInteger("znění-base-id");
+        if (zneniBaseId == null) {
+            return new ObjectMapper().createArrayNode();
+        }
+
+        List<Document> allDocs = getMongoCollection(collectionName)
+                .find(Filters.eq("znění-base-id", zneniBaseId))
+                .into(new ArrayList<>());
+
+        Set<String> parsedIriSet = new LinkedHashSet<>(); 
+
+        for (Document doc : allDocs) {
+            List<Document> vazbaAktList = doc.getList("znění-vazba-akt", Document.class);
+            if (vazbaAktList != null) {
+                for (Document vazba : vazbaAktList) {
+                    Document pravniAktZneni = vazba.get("právní-akt-znění", Document.class);
+                    if (pravniAktZneni != null) {
+                        String iri = pravniAktZneni.getString("iri");
+                        if (iri != null) {
+                            String transformed = transformIri(iri);
+                            parsedIriSet.add(transformed);
+                        }
+                    }
+                }
+            }
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.valueToTree(new ArrayList<>(parsedIriSet));
+    }
+    
+    
+    private String transformIri(String iri) {
+        String[] parts = iri.split("/");
+        List<String> numeric = new ArrayList<>();
+        for (int i = parts.length - 1; i >= 0; i--) {
+            if (parts[i].matches("\\d+")) {
+                numeric.add(parts[i]);
+                if (numeric.size() == 2) {
+                    break;
+                }
+            }
+        }
+        if (numeric.size() < 2) {
+            return iri;
+        }
+        return numeric.get(0) + "/" + numeric.get(1) + " Sb.";
     }
     
 
