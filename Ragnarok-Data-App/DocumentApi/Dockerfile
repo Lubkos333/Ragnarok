@@ -26,3 +26,6 @@ EXPOSE 9090
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "/app/DocumentApi-1.0.jar"]
+
+
+	
