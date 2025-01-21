@@ -6,6 +6,7 @@
 package com.documentapi.Service;
 
 
+import com.documentapi.Configuration.MongoConfig;
 import com.documentapi.Exception.DocumentNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 public class MongoUtils {
      private static final Logger logger = LoggerFactory.getLogger(MongoUtils.class);
      private final MongoDatabase database;
+     private final MongoConfig config;
 
      
      private boolean isProcessing = false;
@@ -44,9 +46,10 @@ public class MongoUtils {
      private final IdFetcherService idFetcher;
      @Autowired
      ObjectMapper objectMapper;
-     public MongoUtils(MongoDatabase database,IdFetcherService idFetcher){
+     public MongoUtils(MongoDatabase database,IdFetcherService idFetcher,MongoConfig config){
          this.idFetcher = idFetcher;
          this.database = database;
+         this.config = config;
         
      }
      
@@ -61,7 +64,6 @@ public class MongoUtils {
      
       public  boolean createCollection(String collectionName) {
         try {
-            // Check if the collection already exists
              dropCollectionIfExists(collectionName);
             logger.info("Collection '{}' created successfully.", collectionName);
             return true;
@@ -79,7 +81,6 @@ public class MongoUtils {
       public Document findInCollection(MongoCollection<Document> collection, String key, Integer value){
              Document filter = new Document(key, value);
             
-            // Retrieve the document
             Document document = collection.find(filter).first();
             
             if (document == null) {
@@ -120,13 +121,13 @@ public class MongoUtils {
     
     
     
-    public JsonNode getDocumentByDesignation(String collectionName, String designation) throws JsonProcessingException, DocumentNotFoundException{
-        Document doc = getMongoCollection(collectionName).find(Filters.eq("akt-plné-označení", designation)).first();
-        return objectMapper.readTree(appendLinks(doc).toJson());
+    public JsonNode getDocumentByDesignation(String designation) throws JsonProcessingException, DocumentNotFoundException{
+        Document doc = getMongoCollection(config.MONGO_COLLECTION_AKTY_FINAL).find(Filters.eq("akt-plné-označení", designation)).first();
+        return objectMapper.readTree(appendLinks(appendRelations(doc)).toJson());
     }
     
-    public JsonNode getRelatedDocuments(String collectionName, Integer id)  throws JsonProcessingException, DocumentNotFoundException {
-        Document baseDoc = getMongoCollection(collectionName)
+    public JsonNode getRelatedDocuments(Integer id)  throws JsonProcessingException, DocumentNotFoundException {
+        Document baseDoc = getMongoCollection(config.MONGO_COLLECTION_AKTY_ZNENI)
             .find(Filters.eq("znění-dokument-id", id))
             .first();
 
@@ -139,7 +140,7 @@ public class MongoUtils {
             return new ObjectMapper().createArrayNode();
         }
 
-        List<Document> allDocs = getMongoCollection(collectionName)
+        List<Document> allDocs = getMongoCollection(config.MONGO_COLLECTION_AKTY_ZNENI)
                 .find(Filters.eq("znění-base-id", zneniBaseId))
                 .into(new ArrayList<>());
 
@@ -195,9 +196,9 @@ public class MongoUtils {
         return arrayNode;
     }
     
-    public JsonNode getDocumentByID(String collectionName, Integer id) throws JsonProcessingException, DocumentNotFoundException{
-        Document doc = getMongoCollection(collectionName).find(Filters.eq("znění-dokument-id", id)).first();
-        return objectMapper.readTree(appendLinks(doc).toJson());
+    public JsonNode getDocumentByID(Integer id) throws JsonProcessingException, DocumentNotFoundException{
+        Document doc = getMongoCollection(config.MONGO_COLLECTION_AKTY_FINAL).find(Filters.eq("znění-dokument-id", id)).first();
+        return objectMapper.readTree(appendLinks(appendRelations(doc)).toJson());
     }
     
     
@@ -221,6 +222,32 @@ public class MongoUtils {
            doc.append("odkaz-stažení-docx", null);  
         }
         return doc;
+    }
+    
+    
+    
+    private Document appendRelations(Document doc) throws DocumentNotFoundException {
+        if (doc == null) {
+            throw new DocumentNotFoundException("Document not found");
+        }
+        Integer zneniDokumentId = doc.getInteger("znění-dokument-id");
+        if (zneniDokumentId == null) {
+            return doc;
+        }
+
+        try {
+            JsonNode relatedDocsNode = getRelatedDocuments(zneniDokumentId);
+            List<String> relatedDocsList = objectMapper.convertValue(
+                relatedDocsNode,
+                new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}
+            );
+            doc.append("vztažené-akty", relatedDocsList);
+            return doc;
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return doc;
+        }
     }
     
      public JsonNode getLinksFromCollection(String collectionName) throws JsonProcessingException{
@@ -256,8 +283,8 @@ public class MongoUtils {
     */
     
     
-     public JsonNode getMetadataByLink(String collectionName,String link) throws DocumentNotFoundException, JsonProcessingException {
-        MongoCollection<Document> collection = getMongoCollection(collectionName);
+     public JsonNode getMetadataByLink(String link) throws DocumentNotFoundException, JsonProcessingException {
+        MongoCollection<Document> collection = getMongoCollection(config.MONGO_COLLECTION_AKTY_FINAL);
 
         Document doc = collection.find(new Document("odkaz-stažení-pdf", link)).first();
         
@@ -268,7 +295,7 @@ public class MongoUtils {
         if (doc == null) {
             throw new DocumentNotFoundException("Document not found by either 'odkaz-stažení-pdf' or 'odkaz-stažení-docx'");
         }
-        return objectMapper.readTree(doc.toJson());
+        return objectMapper.readTree(appendLinks(appendRelations(doc)).toJson());
     }
      
      public Integer getCollectionSize(String collection) {
