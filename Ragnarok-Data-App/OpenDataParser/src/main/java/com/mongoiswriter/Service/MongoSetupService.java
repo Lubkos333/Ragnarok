@@ -341,7 +341,7 @@ public class MongoSetupService {
                 .append("typ-aktu", podTyp)
                 .append("cis-esb-typ-znění-po", cisEsbTypZneniPoložka)
                 .append("znění-datum-účinnosti-od", zneniDatumUcinnostiOdStr);
-
+                
         return doc;
     }
    
