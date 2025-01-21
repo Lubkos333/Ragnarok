@@ -72,7 +72,7 @@ public class IdFetcherService {
                 logger.error("Interrupted while waiting to retry fetching ID: {}", e.getMessage());
                 break;
             }
-            delayMillis *= 1; // Exponential backoff
+            delayMillis *= 1; 
         }
 
         logger.warn("Exceeded max attempts for fetching ID for znění-dokument-id {} format {}.", zneniDokumentId, format);
