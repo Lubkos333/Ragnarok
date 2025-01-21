@@ -144,6 +144,7 @@ public class MongoUtils {
                 .find(Filters.eq("znění-base-id", zneniBaseId))
                 .into(new ArrayList<>());
 
+        System.out.println("Getting related documents. Got " + allDocs.size() + " versions of current act");
         Set<String> parsedIriSet = new LinkedHashSet<>(); 
 
         for (Document doc : allDocs) {
@@ -162,6 +163,8 @@ public class MongoUtils {
             }
         }
 
+        
+        System.out.println("Getting related documents. Got " + parsedIriSet.size() + " related documents" );
         ObjectMapper mapper = new ObjectMapper();
         return mapper.valueToTree(new ArrayList<>(parsedIriSet));
     }
