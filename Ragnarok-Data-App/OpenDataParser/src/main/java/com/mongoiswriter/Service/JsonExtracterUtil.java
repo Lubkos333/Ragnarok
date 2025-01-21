@@ -200,7 +200,7 @@ public class JsonExtracterUtil {
                LocalDate zneniDatumUcinostiOd = LocalDate.parse(zneniDatumUcinostiOdNode.asText(), formatter);
                if (zneniDatumUcinostiOd.isAfter(currentDate)) {
 
-                   document.append("status", "NEPLATNY");
+                  return null;
                }
            }
 
@@ -216,7 +216,7 @@ public class JsonExtracterUtil {
                LocalDate metadataDatumZruseni = LocalDate.parse(metadataDatumZruseniNode.asText(), formatter);
                if (metadataDatumZruseni.isBefore(currentDate)) {
   
-                    document.append("status", "NEPLATNY");
+                    return null;
                }
            }
            
