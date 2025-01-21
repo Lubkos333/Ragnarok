@@ -5,7 +5,6 @@
  */
 package com.documentapi.Controller;
 
-import com.documentapi.Configuration.MongoConfig;
 import com.documentapi.Exception.DocumentNotFoundException;
 import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
@@ -41,78 +40,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class DataController {
     private final MongoUtils mongoUtils;
     private final ControllerHelperService helperService;
-    private final String collection;
-    private final String sourceCollection;
     
-    public DataController(MongoUtils mongoUtils,ControllerHelperService helperService,MongoConfig mongoConfig, ChunkingService chunkingService){
+    public DataController(MongoUtils mongoUtils,ControllerHelperService helperService){
         this.mongoUtils = mongoUtils;
         this.helperService = helperService;
-        collection = mongoConfig.MONGO_COLLECTION_AKTY_FINAL;
-        sourceCollection = mongoConfig.MONGO_COLLECTION_AKTY_ZNENI;
     }
-    
-   @Operation(
-        summary = "Marked for removal. Get all documents",
-        description = "Gets all documents. Do not use. Requires a valid authorization token."
-    )
-    @GetMapping("/getAll")
-    public ResponseEntity<JsonNode> getAllDocs(
-        @RequestHeader("Authorization") String token,  
-        @RequestParam(value = "from", required = false) Integer from, 
-        @RequestParam(value = "to", required = false) Integer to) {
-             if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
-
-            if(helperService.isTokenValid(token)){
-                try {
-                  if (from == null) {
-                   from = 1;
-               }
-
-               if (to == null) {
-                   to = mongoUtils.getCollectionSize(collection);
-               }
-                    JsonNode docs = mongoUtils.getAllWithinRange(collection,from,to);
-                    System.out.println(docs.size());
-                    System.out.println("Source size" + mongoUtils.getCollectionSize(sourceCollection));
-                     return new ResponseEntity<>(docs, HttpStatus.OK);
-                } catch (JsonProcessingException ex) {
-                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            }
-            else{
-               return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-    }
-    
-    @Operation(
-        summary = "Marked for removal. Get all links",
-        description = "Gets all links. Do not use. Requires a valid authorization token."
-    )
-    @GetMapping("/getLinks")
-    public ResponseEntity<JsonNode> getAllLinksOnly(@RequestHeader("Authorization") String token) {
-             if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
-
-            if(helperService.isTokenValid(token)){
-                try {
-                    JsonNode docs = mongoUtils.getLinksFromCollection(collection);
-                     return new ResponseEntity<>(docs, HttpStatus.OK);
-                } catch (JsonProcessingException ex) {
-                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                } 
-            }
-            else{
-               return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-    }
-    
-    
-    
+      
     @Operation(
         summary = "Get a related documents designations for given document ID",
         description = "Fetches a all documents designations from the MongoDB collection by ID of document for which relations are set. Requires a valid authorization token."
@@ -168,7 +101,7 @@ public class DataController {
             }
             if(helperService.isTokenValid(token)){
                 try {
-                    JsonNode doc = mongoUtils.getRelatedDocuments(sourceCollection,Integer.valueOf(id));
+                    JsonNode doc = mongoUtils.getRelatedDocuments(Integer.valueOf(id));
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
@@ -195,7 +128,7 @@ public class DataController {
             }
             if(helperService.isTokenValid(token)){
                 try {
-                    JsonNode doc = mongoUtils.getMetadataByLink(collection,link);
+                    JsonNode doc = mongoUtils.getMetadataByLink(link);
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
@@ -274,7 +207,7 @@ public class DataController {
             }
             if(helperService.isTokenValid(token)){
                 try {
-                    JsonNode doc = mongoUtils.getDocumentByID(collection,Integer.valueOf(id));
+                    JsonNode doc = mongoUtils.getDocumentByID(Integer.valueOf(id));
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
@@ -354,7 +287,7 @@ public class DataController {
             }
             if(helperService.isTokenValid(token)){
                 try {
-                    JsonNode doc = mongoUtils.getDocumentByDesignation(collection,designation);
+                    JsonNode doc = mongoUtils.getDocumentByDesignation(designation);
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
