@@ -80,18 +80,18 @@ public class MongoSetupService {
             try{
                 
                 jsonExtracterUtil.extractFromAddressToMongo(dataSourceConfig.URL_AKTY_ZNENI,mongoConfig.MONGO_COLLECTION_AKTY_ZNENI,ExtracterType.PRAVNI_AKT);
-                mongoUtils.createCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
+               // mongoUtils.createCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
                 mongoUtils.createCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
                 
-                MongoCollection<Document> terminyProcessedCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
+                //MongoCollection<Document> terminyProcessedCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
             
                 MongoCollection<Document> zneniCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
                 MongoCollection<Document> zneniPravniAktCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_ZNENI);
                 transferNewestDocuments(zneniPravniAktCollection,zneniCollection);
                 
-                jsonExtracterUtil.extractFromAddressToMongo(dataSourceConfig.URL_AKTY_VAZBA,mongoConfig.MONGO_COLLECTION_AKTY_VAZBA,ExtracterType.PRAVNI_AKT_VAZBA);
+              //  jsonExtracterUtil.extractFromAddressToMongo(dataSourceConfig.URL_AKTY_VAZBA,mongoConfig.MONGO_COLLECTION_AKTY_VAZBA,ExtracterType.PRAVNI_AKT_VAZBA);
  
-                setRelationsForCollection();
+              //  setRelationsForCollection();
          
             }
             catch(SocketException e){
@@ -141,12 +141,13 @@ public class MongoSetupService {
             Document newDoc = createZneniDocument(zneniDokumentId, zneniBaseId, aktNazevVyhlasen,
                     cisEsbTypZneniPolozka, zneniDatumUcinnostiOdStr, 
                     sbirka.getTypSbirky(), podTypAktu, sbirka.getCisloAktu(), aktCitace);
-        
+            System.out.println("Inserting document while transfering");
             targetCollection.insertOne(newDoc);
         }
     }
     
     private void setRelationsForCollection() {
+        System.out.println("Setting relations started");
         MongoCollection<Document> collection1 = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
         MongoCollection<Document> collection2 = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_VAZBA);
 
@@ -227,11 +228,13 @@ public class MongoSetupService {
 
     
      public void transferNewestDocuments(MongoCollection<Document> sourceCollection, MongoCollection<Document> targetCollection) {
+         System.out.println("Transfer neweest documents started");
         try {
             startTransfer(sourceCollection,targetCollection);
         } catch (InterruptedException ex) {
             java.util.logging.Logger.getLogger(MongoSetupService.class.getName()).log(Level.SEVERE, null, ex);
-        }                        
+        }        
+         System.out.println("Transfer neweest documents completed");
     }
 
         private void processTerminDocument(Document docVazba,
