@@ -179,6 +179,10 @@ public class JsonExtracterUtil {
 
     private Document parseSingleDocument(JsonParser jsonParser, ObjectMapper objectMapper, ExtracterType extracterType, Set<Integer> uniqueIds) throws IOException {
        JsonNode jsonNode = objectMapper.readTree(jsonParser);
+       
+       String jsonString = objectMapper.writeValueAsString(jsonNode);
+       Document document = Document.parse(jsonString);
+       
 
        if (extracterType == ExtracterType.TERMIN_NAZEV) {
        }
@@ -196,7 +200,7 @@ public class JsonExtracterUtil {
                LocalDate zneniDatumUcinostiOd = LocalDate.parse(zneniDatumUcinostiOdNode.asText(), formatter);
                if (zneniDatumUcinostiOd.isAfter(currentDate)) {
 
-                   return null;
+                  return null;
                }
            }
 
@@ -204,7 +208,7 @@ public class JsonExtracterUtil {
                LocalDate zneniDatumUcinostiDo = LocalDate.parse(zneniDatumUcinostiDoNode.asText(), formatter);
                if (zneniDatumUcinostiDo.isBefore(currentDate)) {
 
-                   return null;
+                   document.append("status", "NEPLATNY");
                }
            }
 
@@ -212,12 +216,14 @@ public class JsonExtracterUtil {
                LocalDate metadataDatumZruseni = LocalDate.parse(metadataDatumZruseniNode.asText(), formatter);
                if (metadataDatumZruseni.isBefore(currentDate)) {
   
-                   return null;
+                    return null;
                }
            }
-
-
-
+           
+           
+            document.append("status", "PLATNY");
+            
+            
        } else if (extracterType == ExtracterType.TERMIN_DEFINICE) {
 
            LocalDate currentDate = LocalDate.now();
@@ -240,10 +246,6 @@ public class JsonExtracterUtil {
                return null;
            }
        }
-
-
-       String jsonString = objectMapper.writeValueAsString(jsonNode);
-       Document document = Document.parse(jsonString);
 
        if (extracterType == ExtracterType.TERMIN_VAZBA) {
            Document vazba = new Document();
