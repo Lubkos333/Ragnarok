@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mongo-is-writer
+  name: open-data-parser
 spec:
   schedule: "0 0 1 * *"
   startingDeadlineSeconds: 1
@@ -10,12 +10,12 @@ spec:
       template:
         metadata:
           labels:
-            app: mongo-is-writer
+            app: open-data-parser
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: mongo-is-writer
-              image: registry.gitlab.com/bp-sojka/mppa/mongo-is-writer:latest
+            - name: open-data-parser
+              image: docker.io/semerb01/open-data-parser:latest
               ports:
                 - containerPort: 27017
               env:
@@ -24,15 +24,15 @@ spec:
                 - name: MONGO_PASSWORD
                   value: root
                 - name: MONGO_ADDRESS
-                  value: "mongodb://mongo-replica-set-0.mongo-is-database.mpaa.svc.cluster.local:27017"
+                  value: "mongodb://mongo-service.jcu-rag-ns.svc.cluster.local:27017"
                 - name: THREAD_NUMBER
-                  value: "2"
+                  value: "8"
                 - name: SBIRKA_DOCUMENTS_NUMBER
-                  value: "100"
+                  value: "0"
               resources:
                 requests:
-                  memory: "512Mi"  
-                  cpu: "500m"      
+                  memory: "4Gi"  
+                  cpu: "4"      
                 limits:
-                  memory: "1Gi"    
-                  cpu: "1"         
+                  memory: "8Gi"    
+                  cpu: "8"         
