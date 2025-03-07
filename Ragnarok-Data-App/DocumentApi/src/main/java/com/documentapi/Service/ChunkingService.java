@@ -164,42 +164,109 @@ public class ChunkingService {
     }
     
     
-    public List<CompleteChunk> getParagraphsFromPDF(InputStream inputStream, List<CompleteChunk> chunks) throws IOException{
-
-    try (PDDocument document = PDDocument.load(inputStream)) {
-          String documentTitle = extractPdfTitleFromContent(document);
+    public List<CompleteChunk> getParagraphsFromPDF(InputStream pdfInputStream, List<CompleteChunk>  chunks) throws IOException {      
+        String pdfText;
+        try (PDDocument pdDoc = PDDocument.load(pdfInputStream)) {
             PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
 
-            String[] lines = text.split("\\r?\\n");
-
-            String currentSubtitle = null;
-            StringBuilder currentContent = new StringBuilder();
-
-            for (String line : lines) {
-                line = line.trim(); 
-
-                if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
-                    if (currentSubtitle != null && currentContent.length() > 0) {
-                        chunks.add(new CompleteChunk(documentTitle, currentSubtitle, currentContent.toString().trim(), null));
-                        currentContent.setLength(0);
-                    }
-                    currentSubtitle = line;
-                } else {
-                    if (currentContent.length() > 0) {
-                        currentContent.append(" ");
-                    }
-                    currentContent.append(line);
-                }
-            }
-            if (currentSubtitle != null && currentContent.length() > 0) {
-                chunks.add(new CompleteChunk(documentTitle, currentSubtitle, currentContent.toString().trim(), null));
-            }
+            pdfText = stripper.getText(pdDoc);
         }
 
+        String[] lines = pdfText.split("\\r?\\n");
+
+        String lastMain = null;     // "ČÁST"
+        String lastHead = null;     // "HLAVA"
+        String lastPart = null;     // "Díl"
+        String lastSection = null;  // "Oddíl"
+        String lastTitle = null;    // e.g. style 10 or 26 in DOCX, but here we detect text
+        String lastSubtitle = null; // style 23 in DOCX, or your PDF equivalent
+
+        boolean nextLineIsMain = false;
+        boolean nextLineIsHead = false;
+        boolean nextLineIsPart = false;
+        boolean nextLineIsSection = false;
+
+        CompleteChunk currentChunk = new CompleteChunk();
+        StringBuilder currentContent = new StringBuilder();
+
+        for (String rawLine : lines) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) {
+                continue; 
+            }
+
+            if (line.startsWith("ČÁST")) {
+                nextLineIsMain = true;
+                continue;
+            }
+            if (line.startsWith("HLAVA")) {
+                nextLineIsHead = true;
+                continue;
+            }
+            if (line.startsWith("Díl")) {
+                nextLineIsPart = true;
+                continue;
+            }
+            if (line.startsWith("Oddíl")) {
+                nextLineIsSection = true;
+                continue;
+            }
+
+            if (nextLineIsMain) {
+                lastMain = line;
+                lastHead = null;
+                lastPart = null;
+                lastSection = null;
+                lastTitle = null;
+                nextLineIsMain = false;
+                continue;
+            }
+            if (nextLineIsHead) {
+                lastHead = line;
+                lastPart = null;
+                lastSection = null;
+                lastTitle = null;
+                nextLineIsHead = false;
+                continue;
+            }
+            if (nextLineIsPart) {
+                lastPart = line;
+                lastSection = null;
+                lastTitle = null;
+                nextLineIsPart = false;
+                continue;
+            }
+            
+             if (nextLineIsSection) {
+                lastSection = line;
+                lastTitle = null;
+                nextLineIsSection = false;
+                continue;
+            }
+             
+            if(!line.contains(".") && !line.startsWith("§") && Character.isUpperCase(line.charAt(0))){
+                
+                lastTitle = line;
+            }
+
+            if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
+                finalizeChunk(currentChunk, currentContent, chunks);
+                lastTitle = null;
+                currentChunk = openNewChunk(lastMain, lastHead, lastPart, lastSection, lastTitle, line);
+                currentContent.setLength(0);
+                continue;
+            }
+            
+            if (currentContent.length() > 0) {
+                currentContent.append(" ");
+            }
+            currentContent.append(line);
+        }
+
+        finalizeChunk(currentChunk, currentContent, chunks);
+                       
         return chunks;
     }
-
  
     
     public List<CompleteChunk> getParagraphsFromDOCX(InputStream inputStream,
