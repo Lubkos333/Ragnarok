@@ -304,7 +304,14 @@ public class MongoUtils {
      public Integer getCollectionSize(String collection) {
         return (int) getMongoCollection(collection).countDocuments();
     }
-                  
-    
-       
+     
+     
+    public String getCorrectUrl(String designation) throws JsonProcessingException, DocumentNotFoundException{
+        JsonNode node = getDocumentByDesignation(designation);
+        String url = node.get("odkaz-stažení-docx").asText();
+       if(url == null){
+           url =  node.get("odkaz-stažení-docx").asText();
+       }
+       return url;
+    }
 }

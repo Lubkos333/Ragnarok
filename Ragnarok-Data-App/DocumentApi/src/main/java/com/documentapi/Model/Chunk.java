@@ -10,20 +10,20 @@ package com.documentapi.Model;
  * @author brune
  */
 public class Chunk extends CompleteDocument {
-    private String subTitle;
+    private String paragraph;
 
-    public Chunk(String title, String subTitle, String content) {
+    public Chunk(String title, String paragraph, String content) {
         super(title,content);
-        this.subTitle = subTitle;
+        this.paragraph = paragraph;
+    }
+    
+    public Chunk(){}
 
+    public String getParagraph() {
+        return paragraph;
     }
 
-    public String getSubTitle() {
-        return subTitle;
+    public void setParagraph(String paragraph) {
+        this.paragraph = paragraph;
     }
-
-    public void setSubTitle(String subTitle) {
-        this.subTitle = subTitle;
-    }
-
 }
