@@ -7,6 +7,7 @@ package com.documentapi.Service;
 
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
+import com.documentapi.Model.CompleteChunk;
 import com.documentapi.Model.CompleteDocument;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,6 +28,7 @@ import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFStyle;
 import org.springframework.stereotype.Service;
 
 /**
@@ -69,9 +72,10 @@ public class ChunkingService {
               }
         }
     
+   
     
-    public List<Chunk> getParagraphs(String url) throws UnsupportedFileTypeException, IOException, InterruptedException{
-        List<Chunk> chunks = new ArrayList<>();
+    public List<CompleteChunk> getParagraphs(String url) throws UnsupportedFileTypeException, IOException, InterruptedException{
+        List<CompleteChunk> chunks = new ArrayList<>();
           HttpClient httpClient = HttpClient.newHttpClient();
           HttpRequest request = HttpRequest.newBuilder()
               .uri(URI.create(url))
@@ -160,7 +164,7 @@ public class ChunkingService {
     }
     
     
-    public List<Chunk> getParagraphsFromPDF(InputStream inputStream, List<Chunk> chunks) throws IOException{
+    public List<CompleteChunk> getParagraphsFromPDF(InputStream inputStream, List<CompleteChunk> chunks) throws IOException{
 
     try (PDDocument document = PDDocument.load(inputStream)) {
           String documentTitle = extractPdfTitleFromContent(document);
@@ -177,7 +181,7 @@ public class ChunkingService {
 
                 if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
                     if (currentSubtitle != null && currentContent.length() > 0) {
-                        chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+                        chunks.add(new CompleteChunk(documentTitle, currentSubtitle, currentContent.toString().trim(), null));
                         currentContent.setLength(0);
                     }
                     currentSubtitle = line;
@@ -189,7 +193,7 @@ public class ChunkingService {
                 }
             }
             if (currentSubtitle != null && currentContent.length() > 0) {
-                chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
+                chunks.add(new CompleteChunk(documentTitle, currentSubtitle, currentContent.toString().trim(), null));
             }
         }
 
@@ -198,40 +202,167 @@ public class ChunkingService {
 
  
     
-    public List<Chunk> getParagraphsFromDOCX(InputStream inputStream, List<Chunk> chunks)throws IOException{
-        
+    public List<CompleteChunk> getParagraphsFromDOCX(InputStream inputStream,
+                                                     List<CompleteChunk> chunks) throws IOException {
+        final String STYLE_HEAD = "9";
+        final String STYLE_PART1 = "11";
+        final String STYLE_PART2 = "22";
+        final String STYLE_SECTION = "25";
+        final String STYLE_NEWCHUNK1 = "15";
+        final String STYLE_NEWCHUNK2 = "12";
+        final String STYLE_TITLE1 = "10";
+        final String STYLE_TITLE2 = "26";
+        final String STYLE_SUBTITLE = "23";
+        final String STYLE_MAIN = "7";
+
         try (XWPFDocument document = new XWPFDocument(inputStream)) {
             List<XWPFParagraph> paragraphs = document.getParagraphs();
-            String documentTitle = extractDocxTitle(document);
 
-            String currentSubtitle = null;
+            String lastHead    = null;
+            String lastPart    = null;
+            String lastSection = null;
+            String lastTitle   = null;
+            String lastMain = null;
+
+            boolean nextParagraphIsHead = false;
+            boolean nextParagraphIsPart = false;
+            boolean nextParagraphIsMain = false;
+
+            CompleteChunk currentChunk = new CompleteChunk();
             StringBuilder currentContent = new StringBuilder();
+            
+                for (XWPFParagraph paragraph : paragraphs) {
+        String line = paragraph.getText().trim();
+        String styleId = paragraph.getStyle(); // or paragraph.getStyleID();
+
+        System.out.println("Paragraph text: " + line);
+        System.out.println("Style ID: " + styleId);
+
+        if (styleId != null && document.getStyles() != null) {
+            XWPFStyle styleObj = document.getStyles().getStyle(styleId);
+            if (styleObj != null) {
+                System.out.println("Style name: " + styleObj.getName());
+            }
+            
+        }
+        System.out.println("----");
+    }
 
             for (XWPFParagraph paragraph : paragraphs) {
-                String line = paragraph.getText().trim();
-                
-                if (line.matches("^§\\s*\\d+[a-zA-Z]?$")) {
-                    if (currentSubtitle != null && currentContent.length() > 0) {
-                        chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
-                        currentContent.setLength(0); 
-                    }
-                    currentSubtitle = line;
-                } else {
-                    if (currentContent.length() > 0) {
-                        currentContent.append(" ");
-                    }
-                    currentContent.append(line);
+                String styleId = paragraph.getStyle();
+                String text = paragraph.getText().trim();
+
+
+                if (text.isEmpty()) {
+                    continue;
                 }
+
+                if (STYLE_HEAD.equals(styleId) && text.contains("HLAVA")) {
+                    nextParagraphIsHead = true;
+                    continue; 
+                }
+
+                if ((STYLE_PART1.equals(styleId) || STYLE_PART2.equals(styleId)) && text.contains("Díl")) {
+                    nextParagraphIsPart = true;
+                    continue; 
+                }
+                if(STYLE_MAIN.equals(styleId) && text.contains("ČÁST")){
+                    nextParagraphIsMain = true;
+                    continue;
+                }
+                if(nextParagraphIsMain){
+                    lastMain = text;
+                    lastHead = null; 
+                    lastPart = null;
+                    lastSection = null;
+                    lastTitle = null;
+                    nextParagraphIsMain = false;
+                    continue;
+                }
+
+                if (nextParagraphIsHead) {
+                    lastHead = text;
+                    lastPart = null;
+                    lastSection = null;
+                    lastTitle = null;
+                    nextParagraphIsHead = false;
+                    continue;
+                }
+                if (nextParagraphIsPart) {
+                    lastPart = text;
+                    lastSection = null;
+                    lastTitle = null;
+                    nextParagraphIsPart = false;
+                    continue;
+                }
+                if (STYLE_SECTION.equals(styleId)) {
+                    lastSection = text;
+                    lastTitle = null;
+                    continue;
+                }
+
+                if (STYLE_NEWCHUNK1.equals(styleId) || STYLE_NEWCHUNK2.equalsIgnoreCase(styleId)) {
+                    finalizeChunk(currentChunk, currentContent, chunks);
+
+                    currentChunk = openNewChunk(lastMain, lastHead, lastPart, lastSection, lastTitle, text);
+                    currentContent.setLength(0);
+                    continue;
+                }
+
+                if (STYLE_TITLE1.equals(styleId) || STYLE_TITLE2.equals(styleId)) {
+                    lastTitle = text;
+                    continue;
+                }
+
+                if (STYLE_SUBTITLE.equals(styleId)) {
+                    currentChunk.setParagraphSubtitle(text);
+                    continue;
+                }
+
+                if (currentContent.length() > 0) {
+                    currentContent.append(" ");
+                }
+                currentContent.append(text);
             }
 
-            if (currentSubtitle != null && currentContent.length() > 0) {
-                chunks.add(new Chunk(documentTitle, currentSubtitle, currentContent.toString().trim()));
-            }
+            finalizeChunk(currentChunk, currentContent, chunks);
         }
-
         return chunks;
     }
- 
+
+    private void finalizeChunk(CompleteChunk chunk,
+                               StringBuilder contentBuffer,
+                               List<CompleteChunk> chunks) {
+        if (chunk == null) {
+            return; 
+        }
+        chunk.setContent(contentBuffer.toString().trim());
+
+        if (Objects.equals(chunk.getPart(), chunk.getTitle())) {
+            chunk.setTitle(null);
+        }
+
+        chunks.add(chunk);
+    }
+
+
+    private CompleteChunk openNewChunk(String main,
+                                       String head,
+                                       String part,
+                                       String section,
+                                       String title,
+                                       String paragraphText) {
+        CompleteChunk newChunk = new CompleteChunk();
+        newChunk.setMain(main);
+        newChunk.setHead(head);
+        newChunk.setPart(part);
+        newChunk.setSection(section);
+        newChunk.setTitle(title);
+        newChunk.setParagraph(paragraphText);
+        // paragraphSubtitle is null by default, content is filled later
+        return newChunk;
+    }
+
     
     
     
@@ -396,161 +527,119 @@ public class ChunkingService {
         return chunks;
   }
   
-private static boolean isSubtitle(String text) {
-    if (text.equals(text.toUpperCase()) && text.length() > 3 && text.length() < 100) {
-        return true;
-    }
 
-    String[] subtitleKeywords = { "ČÁST", "HLAVA", "DÍL", "ODDÍL", "PŘECHODNÁ USTANOVENÍ", "ZÁVĚREČNÁ USTANOVENÍ",
-                                  "Předmět zákona", "Základní pojmy", "Veřejná hydrometeorologická služba" };
-    for (String keyword : subtitleKeywords) {
-        if (text.equalsIgnoreCase(keyword)) {
+    private static boolean isLikelySubtitle(String text) {
+        text = text.trim();
+        if (text.isEmpty()) {
+            return false;
+        }
+
+        if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
+            return false;
+        }
+
+        if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
             return true;
         }
-    }
 
-    return false;
-}
-
-private static boolean isSubtitle(XWPFParagraph para) {
-    String text = para.getText().trim();
-
-    String style = para.getStyle();
-    if (style != null) {
-        System.out.println("Paragraph style: " + style);
-        if (style.matches("Heading[1-6]") || style.equalsIgnoreCase("Subtitle") || style.equalsIgnoreCase("Nadpis")) {
+        if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
             return true;
         }
-    }
 
-    if (text.equals(text.toUpperCase()) && text.length() > 3 && text.length() < 100) {
-        return true;
-    }
-
-    String[] subtitleKeywords = { "ČÁST", "HLAVA", "DÍL", "ODDÍL",
-        "PŘECHODNÁ USTANOVENÍ", "ZÁVĚREČNÁ USTANOVENÍ",
-        "Předmět úpravy", "Základní pojmy", "Veřejná hydrometeorologická služba" };
-    for (String keyword : subtitleKeywords) {
-        if (text.equalsIgnoreCase(keyword)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-private static boolean isLikelySubtitle(String text) {
-    text = text.trim();
-    if (text.isEmpty()) {
         return false;
     }
 
-    if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
-        return false;
-    }
 
-    if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
-        return true;
-    }
+    private static String extractPdfTitleFromContent(PDDocument document) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(1);
+        stripper.setEndPage(1);
+        String text = stripper.getText(document);
 
-    if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
-        return true;
-    }
+        String[] lines = text.split("\\r?\\n");
 
-    return false;
-}
-
-
-private static String extractPdfTitleFromContent(PDDocument document) throws IOException {
-    PDFTextStripper stripper = new PDFTextStripper();
-    stripper.setStartPage(1);
-    stripper.setEndPage(1);
-    String text = stripper.getText(document);
-
-    String[] lines = text.split("\\r?\\n");
-
-    StringBuilder titleBuilder = new StringBuilder();
-
-    for (String line : lines) {
-        line = line.trim();
-        if (line.isEmpty() || line.startsWith("§")) {
-            break;
-        }
-        if (titleBuilder.length() > 0) {
-            titleBuilder.append(" ");
-        }
-        titleBuilder.append(line);
-    }
-
-    String documentTitle = titleBuilder.toString().trim();
-
-    if (documentTitle.isEmpty()) {
-        documentTitle = "Untitled Document";
-    }
-
-    return documentTitle;
-}
-
-
-private static boolean isLikelySubtitle(XWPFParagraph para) {
-    String text = para.getText().trim();
-    if (text.isEmpty()) {
-        return false;
-    }
-
-    if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
-        return false;
-    }
-
-    // Check paragraph style
-    String style = para.getStyle();
-    if (style != null) {
-        if (style.matches("Heading[1-6]") || style.equalsIgnoreCase("Subtitle") || style.equalsIgnoreCase("Nadpis")) {
-            return true;
-        }
-    }
-
-    if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
-        return true;
-    }
-
-    if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
-        return true;
-    }
-
-    return false;
-}
-
-
-  
-  
-  
-private static String extractDocxTitle(XWPFDocument document) {
-    String documentTitle = null;
-    POIXMLProperties props = document.getProperties();
-    CoreProperties coreProps = props.getCoreProperties();
-    documentTitle = coreProps.getTitle();
-
-    if (documentTitle == null || documentTitle.isEmpty()) {
         StringBuilder titleBuilder = new StringBuilder();
-        for (XWPFParagraph para : document.getParagraphs()) {
-            String text = para.getText().trim();
-            if (text.startsWith("§")) {
+
+        for (String line : lines) {
+            line = line.trim();
+            if (line.isEmpty() || line.startsWith("§")) {
                 break;
             }
             if (titleBuilder.length() > 0) {
                 titleBuilder.append(" ");
             }
-            titleBuilder.append(text);
+            titleBuilder.append(line);
         }
-        documentTitle = titleBuilder.toString().trim();
+
+        String documentTitle = titleBuilder.toString().trim();
+
+        if (documentTitle.isEmpty()) {
+            documentTitle = "Untitled Document";
+        }
+
+        return documentTitle;
     }
 
-    if (documentTitle == null || documentTitle.isEmpty()) {
-        documentTitle = "Untitled Document";
+
+    private static boolean isLikelySubtitle(XWPFParagraph para) {
+        String text = para.getText().trim();
+        if (text.isEmpty()) {
+            return false;
+        }
+
+        if (text.matches("^\\(?\\d+[\\).]?\\s+.*") || text.matches("^[a-zA-Z][\\).]\\s+.*")) {
+            return false;
+        }
+
+        // Check paragraph style
+        String style = para.getStyle();
+        if (style != null) {
+            if (style.matches("Heading[1-6]") || style.equalsIgnoreCase("Subtitle") || style.equalsIgnoreCase("Nadpis")) {
+                return true;
+            }
+        }
+
+        if (text.equals(text.toUpperCase()) && text.length() > 2 && text.length() < 100) {
+            return true;
+        }
+
+        if (!text.endsWith(".") && text.length() > 2 && text.length() < 100) {
+            return true;
+        }
+
+        return false;
     }
-    return documentTitle;
-}
+
+
+  
+  
+  
+    private static String extractDocxTitle(XWPFDocument document) {
+        String documentTitle = null;
+        POIXMLProperties props = document.getProperties();
+        CoreProperties coreProps = props.getCoreProperties();
+        documentTitle = coreProps.getTitle();
+
+        if (documentTitle == null || documentTitle.isEmpty()) {
+            StringBuilder titleBuilder = new StringBuilder();
+            for (XWPFParagraph para : document.getParagraphs()) {
+                String text = para.getText().trim();
+                if (text.startsWith("§")) {
+                    break;
+                }
+                if (titleBuilder.length() > 0) {
+                    titleBuilder.append(" ");
+                }
+                titleBuilder.append(text);
+            }
+            documentTitle = titleBuilder.toString().trim();
+        }
+
+        if (documentTitle == null || documentTitle.isEmpty()) {
+            documentTitle = "Untitled Document";
+        }
+        return documentTitle;
+    }
 
 
   
