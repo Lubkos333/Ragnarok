@@ -204,120 +204,114 @@ public class ChunkingService {
     
     public List<CompleteChunk> getParagraphsFromDOCX(InputStream inputStream,
                                                      List<CompleteChunk> chunks) throws IOException {
-        final String STYLE_HEAD = "9";
-        final String STYLE_PART1 = "11";
-        final String STYLE_PART2 = "22";
-        final String STYLE_SECTION = "25";
-        final String STYLE_NEWCHUNK1 = "15";
-        final String STYLE_NEWCHUNK2 = "12";
-        final String STYLE_TITLE1 = "10";
-        final String STYLE_TITLE2 = "26";
-        final String STYLE_SUBTITLE = "23";
-        final String STYLE_MAIN = "7";
+
+        final String STYLE_HEAD       = "9";   // "HLAVA"
+        final String STYLE_PART1      = "11";  // "Díl"
+        final String STYLE_PART2      = "22";  // "Díl"
+        final String STYLE_MAIN       = "7";   // "ČÁST"
+        final String STYLE_SECTION    = "25";  // "Oddíl"
+        final String STYLE_NEWCHUNK1  = "15";  // “§ …”
+        final String STYLE_NEWCHUNK2  = "12";  // Possibly “§ …” or similar
+        final String STYLE_TITLE1     = "10";
+        final String STYLE_TITLE2     = "26";
+        final String STYLE_SUBTITLE   = "23";
 
         try (XWPFDocument document = new XWPFDocument(inputStream)) {
+            debugPrintParagraphStyles(document);
             List<XWPFParagraph> paragraphs = document.getParagraphs();
 
-            String lastHead    = null;
-            String lastPart    = null;
-            String lastSection = null;
-            String lastTitle   = null;
-            String lastMain = null;
+            String lastMain    = null; // "ČÁST"
+            String lastHead    = null; // "HLAVA"
+            String lastPart    = null; // "Díl"
+            String lastSection = null; // "Oddíl"
+            String lastTitle   = null; // style 10/26
 
-            boolean nextParagraphIsHead = false;
-            boolean nextParagraphIsPart = false;
-            boolean nextParagraphIsMain = false;
+            boolean nextParIsHead = false;
+            boolean nextParIsPart = false;
+            boolean nextParIsMain = false;
 
+            // Current chunk in progress, plus text buffer
             CompleteChunk currentChunk = new CompleteChunk();
             StringBuilder currentContent = new StringBuilder();
-            
-                for (XWPFParagraph paragraph : paragraphs) {
-        String line = paragraph.getText().trim();
-        String styleId = paragraph.getStyle(); // or paragraph.getStyleID();
-
-        System.out.println("Paragraph text: " + line);
-        System.out.println("Style ID: " + styleId);
-
-        if (styleId != null && document.getStyles() != null) {
-            XWPFStyle styleObj = document.getStyles().getStyle(styleId);
-            if (styleObj != null) {
-                System.out.println("Style name: " + styleObj.getName());
-            }
-            
-        }
-        System.out.println("----");
-    }
 
             for (XWPFParagraph paragraph : paragraphs) {
                 String styleId = paragraph.getStyle();
-                String text = paragraph.getText().trim();
-
+                String text    = paragraph.getText().trim();
 
                 if (text.isEmpty()) {
-                    continue;
+                    continue; // skip empty paragraphs
                 }
 
                 if (STYLE_HEAD.equals(styleId) && text.contains("HLAVA")) {
-                    nextParagraphIsHead = true;
-                    continue; 
+                    nextParIsHead = true;
+                    continue;
                 }
-
                 if ((STYLE_PART1.equals(styleId) || STYLE_PART2.equals(styleId)) && text.contains("Díl")) {
-                    nextParagraphIsPart = true;
-                    continue; 
-                }
-                if(STYLE_MAIN.equals(styleId) && text.contains("ČÁST")){
-                    nextParagraphIsMain = true;
+                    nextParIsPart = true;
                     continue;
                 }
-                if(nextParagraphIsMain){
-                    lastMain = text;
-                    lastHead = null; 
-                    lastPart = null;
-                    lastSection = null;
-                    lastTitle = null;
-                    nextParagraphIsMain = false;
+                if (STYLE_MAIN.equals(styleId) && text.contains("ČÁST")) {
+                    nextParIsMain = true;
                     continue;
                 }
 
-                if (nextParagraphIsHead) {
-                    lastHead = text;
+                if (nextParIsMain) {
+                    lastMain = text;
+
+                    lastHead = null;
                     lastPart = null;
                     lastSection = null;
                     lastTitle = null;
-                    nextParagraphIsHead = false;
+
+                    nextParIsMain = false;
                     continue;
                 }
-                if (nextParagraphIsPart) {
-                    lastPart = text;
+                if (nextParIsHead) {
+                    lastHead = text;
+
+                    lastPart = null;
                     lastSection = null;
                     lastTitle = null;
-                    nextParagraphIsPart = false;
+
+                    nextParIsHead = false;
                     continue;
                 }
+                if (nextParIsPart) {
+                    lastPart = text;
+
+                    lastSection = null;
+                    lastTitle = null;
+
+                    nextParIsPart = false;
+                    continue;
+                }
+
+
                 if (STYLE_SECTION.equals(styleId)) {
                     lastSection = text;
+
                     lastTitle = null;
                     continue;
                 }
+
 
                 if (STYLE_NEWCHUNK1.equals(styleId) || STYLE_NEWCHUNK2.equalsIgnoreCase(styleId)) {
                     finalizeChunk(currentChunk, currentContent, chunks);
-
                     currentChunk = openNewChunk(lastMain, lastHead, lastPart, lastSection, lastTitle, text);
                     currentContent.setLength(0);
                     continue;
                 }
 
+
                 if (STYLE_TITLE1.equals(styleId) || STYLE_TITLE2.equals(styleId)) {
                     lastTitle = text;
                     continue;
                 }
-
                 if (STYLE_SUBTITLE.equals(styleId)) {
                     currentChunk.setParagraphSubtitle(text);
                     continue;
                 }
+
 
                 if (currentContent.length() > 0) {
                     currentContent.append(" ");
@@ -325,16 +319,19 @@ public class ChunkingService {
                 currentContent.append(text);
             }
 
+
             finalizeChunk(currentChunk, currentContent, chunks);
         }
+
         return chunks;
     }
+
 
     private void finalizeChunk(CompleteChunk chunk,
                                StringBuilder contentBuffer,
                                List<CompleteChunk> chunks) {
         if (chunk == null) {
-            return; 
+            return;
         }
         chunk.setContent(contentBuffer.toString().trim());
 
@@ -359,8 +356,26 @@ public class ChunkingService {
         newChunk.setSection(section);
         newChunk.setTitle(title);
         newChunk.setParagraph(paragraphText);
-        // paragraphSubtitle is null by default, content is filled later
+
         return newChunk;
+    }
+
+
+    private void debugPrintParagraphStyles(XWPFDocument document) {
+        List<XWPFParagraph> paragraphs = document.getParagraphs();
+        for (XWPFParagraph paragraph : paragraphs) {
+            String text = paragraph.getText().trim();
+            String styleId = paragraph.getStyle();
+            System.out.println("Paragraph text: " + text);
+            System.out.println("Style ID: " + styleId);
+            if (styleId != null && document.getStyles() != null) {
+                XWPFStyle styleObj = document.getStyles().getStyle(styleId);
+                if (styleObj != null) {
+                    System.out.println("Style name: " + styleObj.getName());
+                }
+            }
+            System.out.println("----");
+        }
     }
 
     
