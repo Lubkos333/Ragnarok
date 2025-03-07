@@ -11,6 +11,7 @@ package com.documentapi.Controller;
 import com.documentapi.Exception.DocumentNotFoundException;
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
+import com.documentapi.Model.CompleteChunk;
 import com.documentapi.Model.CompleteDocument;
 import com.documentapi.Service.ChunkingService;
 import com.documentapi.Service.MongoUtils;
@@ -144,7 +145,7 @@ public class ProcessingController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/getParagraphs")
-    public ResponseEntity<List<Chunk>> getParagraphs(
+    public ResponseEntity<List<CompleteChunk>> getParagraphs(
         @Parameter(description = "Authorization token", example = "testApiKey") 
         @RequestHeader("Authorization") String token,
         @Parameter(description = "URL of the document to extract paragraphs from", example = "https://www.e-sbirka.cz/souborove-sluzby/soubory/0492bcf7-9d99-4e86-be4b-f33c1616d373") 
@@ -153,7 +154,7 @@ public class ProcessingController {
                return new ResponseEntity<>(HttpStatus.PROCESSING); 
             }
             if(helperService.isTokenValid(token)){
-                List <Chunk> response;
+                List <CompleteChunk> response;
                 try {
                     response = chunkingService.getParagraphs(url);
                 } catch (UnsupportedFileTypeException ex) {
