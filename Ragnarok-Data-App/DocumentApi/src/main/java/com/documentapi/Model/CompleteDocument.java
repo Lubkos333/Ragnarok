@@ -16,6 +16,8 @@ public class CompleteDocument {
         this.title = title;
         this.content = content;
     }
+    
+    public CompleteDocument(){}
 
     public String getTitle() {
         return title;
