@@ -27,7 +27,7 @@ public class VectorStoreConfig {
 
     @Bean
     public VectorStore chromaVectorStore(EmbeddingModel embeddingModel, ChromaApi chromaApi) {
-        return new ChromaVectorStore(embeddingModel, chromaApi, "SpringAiCollection", false);
+        return new ChromaVectorStore(embeddingModel, chromaApi, "SpringAiCollection", true);
     }
 
 }
