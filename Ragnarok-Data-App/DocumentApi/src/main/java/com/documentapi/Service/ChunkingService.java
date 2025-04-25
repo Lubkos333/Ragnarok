@@ -5,6 +5,8 @@
  */
 package com.documentapi.Service;
 
+import com.documentapi.Configuration.KeywordsConfig;
+import com.documentapi.Configuration.StyleConfig;
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
 import com.documentapi.Model.CompleteChunk;
@@ -38,10 +40,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ChunkingService {
+    
+    private final StyleConfig styleConfig;
+    private final KeywordsConfig keywordsConfig;
    
- public ChunkingService(){
-     
- }
+    public ChunkingService(StyleConfig styleConfig, KeywordsConfig keywordsConfig){
+        this.styleConfig = styleConfig;
+        this.keywordsConfig = keywordsConfig;
+        System.out.println(styleConfig.newchunk().size());
+        System.out.println(keywordsConfig.list().size());
+    }
     public List<Chunk> processUrl(String url) throws UnsupportedFileTypeException, IOException, InterruptedException{
         List<Chunk> chunks = new ArrayList<>();
           HttpClient httpClient = HttpClient.newHttpClient();
@@ -272,17 +280,6 @@ public class ChunkingService {
     public List<CompleteChunk> getParagraphsFromDOCX(InputStream inputStream,
                                                      List<CompleteChunk> chunks) throws IOException {
 
-        final String STYLE_HEAD       = "9";   // "HLAVA"
-        final String STYLE_PART1      = "11";  // "Díl"
-        final String STYLE_PART2      = "22";  // "Díl"
-        final String STYLE_MAIN       = "7";   // "ČÁST"
-        final String STYLE_SECTION    = "25";  // "Oddíl"
-        final String STYLE_NEWCHUNK1  = "15";  // “§ …”
-        final String STYLE_NEWCHUNK2  = "12";  // Possibly “§ …” or similar
-        final String STYLE_TITLE1     = "10";
-        final String STYLE_TITLE2     = "26";
-        final String STYLE_SUBTITLE   = "23";
-
         try (XWPFDocument document = new XWPFDocument(inputStream)) {
             debugPrintParagraphStyles(document);
             List<XWPFParagraph> paragraphs = document.getParagraphs();
@@ -297,7 +294,6 @@ public class ChunkingService {
             boolean nextParIsPart = false;
             boolean nextParIsMain = false;
 
-            // Current chunk in progress, plus text buffer
             CompleteChunk currentChunk = new CompleteChunk();
             StringBuilder currentContent = new StringBuilder();
 
@@ -306,22 +302,25 @@ public class ChunkingService {
                 String text    = paragraph.getText().trim();
 
                 if (text.isEmpty()) {
-                    continue; // skip empty paragraphs
+                    continue; 
                 }
 
-                if (STYLE_HEAD.equals(styleId) && text.contains("HLAVA")) {
+                if (isStyleMatch(styleConfig.head(), styleId) && isKeywordMatch(keywordsConfig.list(),0, text)) {
                     nextParIsHead = true;
                     continue;
                 }
-                if ((STYLE_PART1.equals(styleId) || STYLE_PART2.equals(styleId)) && text.contains("Díl")) {
+                
+                if (isStyleMatch(styleConfig.part(), styleId) && isKeywordMatch(keywordsConfig.list(),1, text)) {
                     nextParIsPart = true;
                     continue;
                 }
-                if (STYLE_MAIN.equals(styleId) && text.contains("ČÁST")) {
+                
+                if (isStyleMatch(styleConfig.main(), styleId) && isKeywordMatch(keywordsConfig.list(),2, text)) {
                     nextParIsMain = true;
                     continue;
                 }
-
+                
+               
                 if (nextParIsMain) {
                     lastMain = text;
 
@@ -352,33 +351,31 @@ public class ChunkingService {
                     nextParIsPart = false;
                     continue;
                 }
-
-
-                if (STYLE_SECTION.equals(styleId)) {
+                
+                
+                if (isStyleMatch(styleConfig.section(), styleId)) {
                     lastSection = text;
 
                     lastTitle = null;
                     continue;
                 }
-
-
-                if (STYLE_NEWCHUNK1.equals(styleId) || STYLE_NEWCHUNK2.equalsIgnoreCase(styleId)) {
+               
+                if (isStyleMatch(styleConfig.newchunk(), styleId)) {
                     finalizeChunk(currentChunk, currentContent, chunks);
                     currentChunk = openNewChunk(lastMain, lastHead, lastPart, lastSection, lastTitle, text);
                     currentContent.setLength(0);
                     continue;
                 }
-
-
-                if (STYLE_TITLE1.equals(styleId) || STYLE_TITLE2.equals(styleId)) {
+                
+                if (isStyleMatch(styleConfig.title(), styleId)) {
                     lastTitle = text;
                     continue;
                 }
-                if (STYLE_SUBTITLE.equals(styleId)) {
+                
+                if (isStyleMatch(styleConfig.subtitle(), styleId)) {
                     currentChunk.setParagraphSubtitle(text);
                     continue;
                 }
-
 
                 if (currentContent.length() > 0) {
                     currentContent.append(" ");
@@ -426,6 +423,16 @@ public class ChunkingService {
 
         return newChunk;
     }
+    
+    
+    private boolean isStyleMatch(List<String> styleList, String styleId) {
+        return styleList.stream().anyMatch(id -> id.trim().equalsIgnoreCase(styleId.trim()));
+    }
+    
+    private boolean isKeywordMatch(List<String> keywords, int index, String text) {
+        if (index >= keywords.size()) return false;
+        return text.contains(keywords.get(index));
+    }
 
 
     private void debugPrintParagraphStyles(XWPFDocument document) {
@@ -438,6 +445,7 @@ public class ChunkingService {
             if (styleId != null && document.getStyles() != null) {
                 XWPFStyle styleObj = document.getStyles().getStyle(styleId);
                 if (styleObj != null) {
+                    System.out.println("is paragraph: " + isStyleMatch(styleConfig.newchunk(), styleId));
                     System.out.println("Style name: " + styleObj.getName());
                 }
             }
