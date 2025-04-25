@@ -4,10 +4,13 @@
 
 package com.documentapi;
 
+import com.documentapi.Configuration.KeywordsConfig;
+import com.documentapi.Configuration.StyleConfig;
 import java.util.Collections;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -16,6 +19,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableConfigurationProperties({StyleConfig.class, KeywordsConfig.class})
 @EnableAsync
 public class DocumentApi {
 
