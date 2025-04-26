@@ -16,6 +16,7 @@ import com.documentapi.Model.CompleteDocument;
 import com.documentapi.Service.CompleteChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.documentapi.Service.ParagraphChunkingService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -164,7 +165,7 @@ public class ProcessingController {
          "content": "(1)    Ustanovení právního řádu upravující vzájemná práva a povinnosti osob vytvářejí ve svém souhrnu soukromé právo. Uplatňování soukromého práva je nezávislé na uplatňování práva veřejného. (2)    Nezakazuje-li to zákon výslovně, mohou si osoby ujednat práva a povinnosti odchylně od zákona; zakázána jsou ujednání porušující dobré mravy, veřejný pořádek nebo právo týkající se postavení osob, včetně práva na ochranu osobnosti."
        },
        {
-         "title": null,
+         "title": Soukromé právo,
          "paragraph": "§ 2",
          "content": "(1)    Každé ustanovení soukromého práva lze vykládat jenom ve shodě s Listinou základních práv a svobod a ústavním pořádkem vůbec, se zásadami, na nichž spočívá tento zákon, jakož i s trvalým zřetelem k hodnotám, které se tím chrání. Rozejde-li se výklad jednotlivého ustanovení pouze podle jeho slov s tímto příkazem, musí mu ustoupit. (2)    Zákonnému ustanovení nelze přikládat jiný význam, než jaký plyne z vlastního smyslu slov v jejich vzájemné souvislosti a z jasného úmyslu zákonodárce; nikdo se však nesmí dovolávat slov právního předpisu proti jeho smyslu. (3)    Výklad a použití právního předpisu nesmí být v rozporu s dobrými mravy a nesmí vést ke krutosti nebo bezohlednosti urážející obyčejné lidské cítění."
        },
@@ -216,7 +217,7 @@ public class ProcessingController {
   
     @Operation(
         summary = "Get document content",
-        description = "Extracts complete content from document at the given URL. Works with DOCX and PDF links. Requires a valid authorization token."
+        description = "Extracts complete content from document at the given designation. Requires a valid authorization token."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Content extracted successfully",
@@ -238,15 +239,15 @@ public class ProcessingController {
     public ResponseEntity<CompleteDocument> getCompleteDocument(
         @Parameter(description = "Authorization token", example = "testApiKey") 
         @RequestHeader("Authorization") String token,
-        @Parameter(description = "URL of the document", example = "https://www.e-sbirka.cz/souborove-sluzby/soubory/0492bcf7-9d99-4e86-be4b-f33c1616d373") 
-        @RequestParam("url") String url) {
+        @Parameter(description = "Designation of document", example = "89/2012 Sb.") 
+        @RequestParam("designation") String designation) {
             if(mongoUtils.isProcessing()){
                return new ResponseEntity<>(HttpStatus.PROCESSING); 
             }
             if(helperService.isTokenValid(token)){
                 CompleteDocument response;
                 try {
-                    response = completeChunkingService.getContent(url);
+                    response = completeChunkingService.getContent(mongoUtils.getPdfUrl(designation));
                 } catch (UnsupportedFileTypeException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -256,6 +257,9 @@ public class ProcessingController {
                 }
                 catch (IOException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                } catch (DocumentNotFoundException ex) {
+                    Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
                 return new ResponseEntity<>(response, HttpStatus.OK);
