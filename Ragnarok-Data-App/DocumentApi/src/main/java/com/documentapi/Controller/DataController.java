@@ -6,7 +6,7 @@
 package com.documentapi.Controller;
 
 import com.documentapi.Exception.DocumentNotFoundException;
-import com.documentapi.Service.ChunkingService;
+import com.documentapi.Service.CompleteChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -102,33 +102,6 @@ public class DataController {
             if(helperService.isTokenValid(token)){
                 try {
                     JsonNode doc = mongoUtils.getRelatedDocuments(Integer.valueOf(id));
-                     return new ResponseEntity<>(doc, HttpStatus.OK);
-                } catch (JsonProcessingException ex) {
-                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                } catch (DocumentNotFoundException ex) {
-                    Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-                }
-            }
-            else{
-               return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-    }
-    
-    @Operation(
-        summary = "Marked for removal. Get document by link",
-        description = "Get document by link. Do not use. Requires a valid authorization token."
-    )
-    
-    @GetMapping("/getByLink")
-    public ResponseEntity<JsonNode> getOneByLink(@RequestHeader("Authorization") String token, @RequestParam("url")String link) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
-            if(helperService.isTokenValid(token)){
-                try {
-                    JsonNode doc = mongoUtils.getMetadataByLink(link);
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);

@@ -39,12 +39,12 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
-public class ChunkingService {
+public class CompleteChunkingService {
     
     private final StyleConfig styleConfig;
     private final KeywordsConfig keywordsConfig;
    
-    public ChunkingService(StyleConfig styleConfig, KeywordsConfig keywordsConfig){
+    public CompleteChunkingService(StyleConfig styleConfig, KeywordsConfig keywordsConfig){
         this.styleConfig = styleConfig;
         this.keywordsConfig = keywordsConfig;
         System.out.println(styleConfig.newchunk().size());
