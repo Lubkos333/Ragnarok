@@ -134,24 +134,22 @@ public class ParagraphChunkingService {
                 continue; 
             }
              
-            if(!line.contains(".") && !line.startsWith("§") && Character.isUpperCase(line.charAt(0))){
-                
-                lastTitle = line;
-            }
+               if(isTitle(line)){
+
+                    lastTitle = line;
+                }
+
             
             
 
             if (line.matches("^§\\s\\d+(\\s.{1,2})?$")) {
                 finalizeChunk(currentChunk, currentContent, chunks);
-                lastTitle = null;
                 currentChunk = openNewChunk(lastTitle, line);
                 currentContent.setLength(0);
                 continue;
             }
             
-            if (currentContent.length() > 0) {
-                currentContent.append(" ");
-            }
+
             currentContent.append(line);
         }
 
@@ -181,7 +179,7 @@ public class ParagraphChunkingService {
                         continue; 
                 }
 
-                if(!text.contains(".") && !text.startsWith("§") && Character.isUpperCase(text.charAt(0))){
+                if(isTitle(text)){
 
                     lastTitle = text;
                 }
@@ -189,15 +187,11 @@ public class ParagraphChunkingService {
 
                 if (text.matches("^§\\s\\d+(\\s.{1,2})?$")) {
                     finalizeChunk(currentChunk, currentContent, chunks);
-                    lastTitle = null;
                     currentChunk = openNewChunk(lastTitle, text);
                     currentContent.setLength(0);
                     continue;
                 }
 
-                if (currentContent.length() > 0) {
-                    currentContent.append(" ");
-                }
                 currentContent.append(text);
             }
 
@@ -205,6 +199,20 @@ public class ParagraphChunkingService {
         }
 
         return chunks;
+    }
+    
+    
+    private boolean isTitle(String line){
+            return !line.contains(".") && 
+                    !line.startsWith("§") && 
+                    Character.isUpperCase(line.charAt(0)) && 
+                    !line.contains(",") && 
+                    line.length() < 20 && 
+                    !isKeywordMatch(keywordsConfig.list(),0,line) && 
+                    !isKeywordMatch(keywordsConfig.list(),1,line) && 
+                    !isKeywordMatch(keywordsConfig.list(),2,line) &&
+                    !isKeywordMatch(keywordsConfig.list(),3,line) &&
+                    !isKeywordMatch(keywordsConfig.list(),4,line);
     }
 
 
