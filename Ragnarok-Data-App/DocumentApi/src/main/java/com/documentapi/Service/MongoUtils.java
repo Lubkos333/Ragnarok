@@ -310,7 +310,7 @@ public class MongoUtils {
         JsonNode node = getDocumentByDesignation(designation);
         String url = node.get("odkaz-stažení-docx").asText();
        if(url == null){
-           url =  node.get("odkaz-stažení-docx").asText();
+           url =  node.get("odkaz-stažení-pdf").asText();
        }
        return url;
     }
@@ -320,7 +320,7 @@ public class MongoUtils {
         JsonNode node = getDocumentByDesignation(designation);
         String url = node.get("odkaz-stažení-pdf").asText();
        if(url == null){
-           url =  node.get("odkaz-stažení-pdf").asText();
+           url =  node.get("odkaz-stažení-docx").asText();
        }
        return url;
     }
