@@ -57,7 +57,7 @@ public class ParagraphChunkingService {
               .build();
           HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-            InputStream inputStream = response.body();
+           InputStream inputStream = response.body();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
               bufferedInputStream.mark(10);
@@ -139,7 +139,7 @@ public class ParagraphChunkingService {
                 lastTitle = line;
             }
             
-            System.out.println("Line: '" + line + "'");
+            
 
             if (line.matches("^§\\s\\d+(\\s.{1,2})?$")) {
                 finalizeChunk(currentChunk, currentContent, chunks);
@@ -159,7 +159,8 @@ public class ParagraphChunkingService {
                        
         return chunks;
     }
- 
+    
+   
     
     public List<Chunk> getParagraphsFromDOCX(InputStream inputStream,
                                                      List<Chunk> chunks) throws IOException {
@@ -168,38 +169,37 @@ public class ParagraphChunkingService {
             debugPrintParagraphStyles(document);
             List<XWPFParagraph> paragraphs = document.getParagraphs();
 
-            String lastTitle   = null; // style 10/26
+            String lastTitle   = null;
 
             Chunk currentChunk = new Chunk();
             StringBuilder currentContent = new StringBuilder();
 
             for (XWPFParagraph paragraph : paragraphs) {
-                String styleId = paragraph.getStyle();
-                String text    = paragraph.getText().trim();
+                String text  = paragraph.getText().trim();
 
                 if (text.isEmpty()) {
-                    continue; 
+                        continue; 
                 }
-            
-               
-                if (isStyleMatch(styleConfig.newchunk(), styleId)) {
+
+                if(!text.contains(".") && !text.startsWith("§") && Character.isUpperCase(text.charAt(0))){
+
+                    lastTitle = text;
+                }
+
+
+                if (text.matches("^§\\s\\d+(\\s.{1,2})?$")) {
                     finalizeChunk(currentChunk, currentContent, chunks);
+                    lastTitle = null;
                     currentChunk = openNewChunk(lastTitle, text);
                     currentContent.setLength(0);
                     continue;
                 }
-                
-                if (isStyleMatch(styleConfig.title(), styleId)) {
-                    lastTitle = text;
-                    continue;
-                }
-                
+
                 if (currentContent.length() > 0) {
                     currentContent.append(" ");
                 }
                 currentContent.append(text);
             }
-
 
             finalizeChunk(currentChunk, currentContent, chunks);
         }
