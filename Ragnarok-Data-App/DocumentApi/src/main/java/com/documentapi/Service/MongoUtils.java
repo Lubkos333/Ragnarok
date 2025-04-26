@@ -306,11 +306,21 @@ public class MongoUtils {
     }
      
      
-    public String getCorrectUrl(String designation) throws JsonProcessingException, DocumentNotFoundException{
+    public String getDocxUrl(String designation) throws JsonProcessingException, DocumentNotFoundException{
         JsonNode node = getDocumentByDesignation(designation);
         String url = node.get("odkaz-stažení-docx").asText();
        if(url == null){
            url =  node.get("odkaz-stažení-docx").asText();
+       }
+       return url;
+    }
+    
+    
+     public String getPdfUrl(String designation) throws JsonProcessingException, DocumentNotFoundException{
+        JsonNode node = getDocumentByDesignation(designation);
+        String url = node.get("odkaz-stažení-pdf").asText();
+       if(url == null){
+           url =  node.get("odkaz-stažení-pdf").asText();
        }
        return url;
     }
