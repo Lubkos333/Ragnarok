@@ -2,7 +2,6 @@ export class ChatWebSocket {
   private static instance: ChatWebSocket;
   private socket: WebSocket;
 
-  // ToDo: connect to real WebSocket server
   private constructor() {
     this.socket = new WebSocket(`ws://${process.env.NEXT_PUBLIC_RAGNAROK_UI_URL}/ws/chat`);
     this.socket.onopen = () => console.log("WebSocket connected");
