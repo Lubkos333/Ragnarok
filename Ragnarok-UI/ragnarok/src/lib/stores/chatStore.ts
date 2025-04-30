@@ -3,12 +3,15 @@ import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
 import { Chat, Message } from "@/types/chat.interface";
+import { FlowType } from "@/services/api/chatApi";
 
 interface ChatState {
   chats: Chat[];
   activeChatId: string | null; // Currently selected chat
   // activeChat: Chat | null;
-  createChat: (title: string) => void;
+  flow: FlowType;
+  setFlow: (flow: FlowType) => void;
+  createChat: (title: string) => string;
   deleteChat: (id: string) => void;
   setActiveChat: (id: string | null) => void;
   sendMessage: (text: string, serverResponse?: boolean) => void;
@@ -19,6 +22,7 @@ export const useChatStore = create(
     (set, get) => ({
       chats: [],
       activeChatId: null,
+      flow: "CLASSIC",
       // activeChat: null,
 
       // Create a new chat with a unique ID
@@ -27,12 +31,13 @@ export const useChatStore = create(
           id: uuidv4(),
           title,
           messages: [],
-          lastUpdated: Date.now(),
+          lastUpdated: Date.now()
         };
         set((state) => ({
           chats: [...state.chats, newChat],
           activeChatId: newChat.id,
         }));
+        return newChat.id
       },
 
       // Delete a chat by its ID
@@ -58,7 +63,7 @@ export const useChatStore = create(
 
         const newMessage: Message = {
           sender: !serverResponse ? "user" : "ragnarok",
-          text,
+          text: text,
           timestamp: Date.now(),
         };
 
@@ -74,6 +79,14 @@ export const useChatStore = create(
           ),
         });
       },
+      setFlow: (flow: FlowType) => {
+        console.log("FLOW:" , flow)
+        set((/*state*/) => ({
+          // activeChat: state.chats.find((chat) => chat.id === id) || null,
+          flow: flow,
+        }));
+      }
+
     }),
     {
       name: "multi-chat-storage", // LocalStorage key

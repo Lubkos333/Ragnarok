@@ -1,5 +1,6 @@
 package cz.ragnarok.ragnarok.rest.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public class TestDto {
-    private String question;
-    private String answer;
-    private String expectedAnswer;
-    private String middleStep;
-    private List<DocumentsResponseDto> documents;
-
+public class FullTestLightDto {
+    private List<TestLightDto> classic;
+    private List<TestLightDto> paraphrase;
+    private List<TestLightDto> keyword;
 }

@@ -3,25 +3,16 @@ port: 7777
 server:
   port: ${port}
 
-#logging:
-#  level:
-#    reactor:
-#      netty:
-#        http:
-#          client: DEBUG
-#    org:
-#      apache:
-#        http: TRACE
-#      springframework:
-#        ai: TRACE
-#        web:
-#          reactive:
-#            function:
-#              client: TRACE
-#          client: TRACE
-
 vector-db:
-  collection-id: 85fed441-058b-4c03-bce9-ffb294efe83a
+  address: http://is-vector-db.dyn.cloud.e-infra.cz
+  collection-id: e14385e1-c1a7-4e8e-9eaa-ac013d1d0884
+  collection-name: SpringAiCollection
+
+#vector-db:
+#  collection-id: 428800ff-250f-4dae-af81-55ca47aa691c
+#  collection-name: SpringAiCollectionTest
+
+
 
 spring:
   ai:
