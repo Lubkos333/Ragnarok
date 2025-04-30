@@ -4,6 +4,7 @@ import org.springframework.ai.chroma.ChromaApi;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.ChromaVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -11,6 +12,9 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 public class VectorStoreConfig {
+
+    @Value("${vector-db.collection-name}")
+    private String collectionName;
 
     @Bean
     public RestClient.Builder builder() {
@@ -25,9 +29,9 @@ public class VectorStoreConfig {
         return chromaApi;
     }
 
-    @Bean
+    @Bean(name = "chromaDb")
     public VectorStore chromaVectorStore(EmbeddingModel embeddingModel, ChromaApi chromaApi) {
-        return new ChromaVectorStore(embeddingModel, chromaApi, "SpringAiCollection", true);
+        return new ChromaVectorStore(embeddingModel, chromaApi, collectionName, true);
     }
 
 }

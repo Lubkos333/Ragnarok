@@ -1,6 +1,8 @@
 package cz.ragnarok.ragnarok.service;
 
+import cz.ragnarok.ragnarok.rest.dto.ChromaDbResponseEntity;
 import cz.ragnarok.ragnarok.rest.dto.ChunkDto;
+import cz.ragnarok.ragnarok.rest.dto.DataByDesignationDto;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +13,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class DataService {
@@ -25,15 +27,6 @@ public class DataService {
     @Autowired
     private VectorDBService vectorDBService;
 
-    public Mono<List<ChunkDto>> getChunks(String url) {
-        return dataClient.get()
-                .uri("/api/processing/getChunks?url="+url)
-                .header("Authorization", "Bearer testApiKey")
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
-                .timeout(Duration.ofMinutes(5));
-    }
-
     public Mono<List<ChunkDto>> getParagraphsByDesignation(String designation) {
         return dataClient.get()
                 .uri("/api/processing/getParagraphsByDesignation?designation="+ designation)
@@ -42,63 +35,48 @@ public class DataService {
                 .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
                 .timeout(Duration.ofMinutes(5));
     }
-    public List<Document> chunksToDocuments(Mono<List<ChunkDto>> chunks) {
-        List<Document> docs = chunks.block().stream().skip(30).map(
-                chunkDto -> vectorDBService.makeDocument(chunkDto)
-        ).toList();
 
-        return docs;
+    public Mono<List<ChunkDto>> getParagraphsOnlyByDesignation(String designation) {
+        return dataClient.get()
+                .uri("/api/processing/getParagraphsOnlyByDesignation?designation="+ designation)
+                .header("Authorization", "Bearer testApiKey")
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
+                .timeout(Duration.ofMinutes(5));
     }
 
-    public List<Document> chunksToDocuments(List<ChunkDto> chunks) {
+    public String test(String designation) {
+        List<ChunkDto> chunks = getParagraphsOnlyByDesignation(designation).block();
+        return chunks.toString();
+    }
+
+    public Mono<DataByDesignationDto> getDataByDesignation(String designation) {
+        return dataClient.get()
+                .uri("/api/data/getByDesignation?designation="+ designation)
+                .header("Authorization", "Bearer testApiKey")
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<DataByDesignationDto>() {})
+                .timeout(Duration.ofMinutes(5));
+    }
+
+    public List<Document> chunksToDocuments(List<ChunkDto> chunks, String designation, LocalDate date) {
         List<Document> docs = chunks.stream().map(
-                chunkDto -> vectorDBService.makeDocument(chunkDto)
+                chunkDto -> vectorDBService.makeDocument(chunkDto, designation, date)
         ).toList();
 
         return docs;
     }
 
-    public void saveChunks() {
-        //List<ChunkDto> chunks = getChunks("https://www.e-sbirka.cz/souborove-sluzby/soubory/c69e52bb-26a3-4516-8088-85a3d88cafc1").block();
-        List<ChunkDto> chunks = getParagraphsByDesignation("89/2012 Sb.").block();
-        chunks = chunks.stream().toList();
-        chunks = chunks.subList(0, chunks.size() - 1);
-        int chunksSize = chunks.size();
-        int chunkSize = 10;
-        for (int i = 0; i < chunksSize; i += chunkSize){
-            try {
-                List<ChunkDto> chunk = chunks.subList(i, Math.min(i + chunkSize, chunksSize));
-                vectorDBService.uploadChunks(chunksToDocuments(chunk));
-            }
-            catch (Exception e) {
-                System.out.println(e);
-                /*List<ChunkDto> chunk = chunks.subList(i, Math.min((i + chunkSize) -1 , chunksSize -1 ));
-                vectorDBService.uploadChunks(chunksToDocuments(chunk));*/
-            }
-        }
-    }
-
-    public void saveShortenChunks() {
-        //List<ChunkDto> chunks = getChunks("https://www.e-sbirka.cz/souborove-sluzby/soubory/c69e52bb-26a3-4516-8088-85a3d88cafc1").block();
-        List<ChunkDto> chunks = getParagraphsByDesignation("89/2012 Sb.").block();
-        chunks = chunks.stream().toList();
-        int chunksSize = chunks.size();
-        int chunkSize = 10;
-        for (int i = 0; i < chunksSize; i += chunkSize){
-            upload(chunks.subList(i, Math.min(i + chunkSize, chunksSize)));
-        }
-    }
-
-    private void upload(List<ChunkDto> chunks) {
+    private void upload(List<ChunkDto> chunks, String designation, LocalDate date) {
         try {
-            vectorDBService.uploadChunks(chunksToDocuments(chunks));
+            vectorDBService.uploadChunks(chunksToDocuments(chunks, designation, date));
         }
         catch (NonTransientAiException e) {
             List<ChunkDto> shortenChunks = new ArrayList<>();
             for (ChunkDto chunkDto : chunks) {
                 shortenChunks.addAll(shortChunk(chunkDto));
             }
-            upload(shortenChunks);
+            upload(shortenChunks, designation, date);
         }
         catch (Exception e) {
             System.out.println(e);
@@ -120,6 +98,36 @@ public class DataService {
         }
         else {
             return List.of();
+        }
+    }
+
+    public String uploadDocumentByDesignation(String designation) {
+        try {
+            ChromaDbResponseEntity doc = vectorDBService.getByDesignation(designation, 1);
+            LocalDate newDate = getDataByDesignation(designation).block().getZneniDatumUcinnostiOd();
+            if(!doc.getIds().isEmpty()) {
+                LocalDate oldDate = LocalDate.parse(doc.getMetadatas().getFirst().getDate());
+                if (newDate.isAfter(oldDate)) {
+                    vectorDBService.deleteByDesignation(designation);
+                }
+                else {
+                    return "OK";
+                }
+            }
+            saveShortenChunksByDesignation(designation, newDate);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        return "OK";
+    }
+
+    public void saveShortenChunksByDesignation(String designation, LocalDate newDate) {
+        List<ChunkDto> chunks = getParagraphsByDesignation(designation).block();
+        chunks = chunks.stream().toList();
+        int chunksSize = chunks.size();
+        int chunkSize = 10;
+        for (int i = 0; i < chunksSize; i += chunkSize) {
+            upload(chunks.subList(i, Math.min(i + chunkSize, chunksSize)), designation, newDate);
         }
     }
 

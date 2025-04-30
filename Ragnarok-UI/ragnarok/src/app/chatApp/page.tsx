@@ -5,8 +5,9 @@ import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWindow } from "@/components/chat/chat-window";
 import { OnboardingModal } from "@/components/chat/onboarding-modal";
 import { useOnboardingStore } from "@/lib/stores/onBoardingStore";
-import { chatApi } from "@/services/api/chatApi";
+import { chatApi, MessageDto } from "@/services/api/chatApi";
 import { ChatWebSocket } from "@/services/websocket";
+import { useState } from "react";
 
 const commonQuestions = [
   "Jaká jsou základní práva zaměstnanců v České republice?",
@@ -22,11 +23,13 @@ const ChatApp = () => {
     // deleteChat,
     // setActiveChat,
     sendMessage,
+    flow,
   } = useChatStore();
 
   const showOnboarding = useOnboardingStore((state) => state.showOnboarding);
   const setOnboarding = useOnboardingStore((state) => state.setOnboarding);
   const ws = ChatWebSocket.getInstance();
+  const [isTyping, setIsTyping] = useState(false);
 
   return (
     <div className="flex-1 flex flex-col w-full bg-muted">
@@ -40,15 +43,21 @@ const ChatApp = () => {
             <Input
               placeholder="Zde napište svůj dotaz..."
               className="max-w-xl mx-auto text-foreground hover:outline-none hover:ring-1 hover:ring-ring hover:ring-offset-2"
-              onKeyDown={(e) => {
+              onKeyDown={async (e) => {
                 if (e.key === "Enter") {
                   const message = (e.target as HTMLInputElement).value;
                   const title = message.slice(0, 20);
-                  createChat(title);
+                  const newChatId = await createChat(title);
                   sendMessage(message);
-                  chatApi(ws ,message).then((response) => {
+                  const messageDto: MessageDto = {
+                    conversationId: newChatId,
+                    question: message,
+                    flowType: flow
+                  }
+                  setIsTyping(true);
+                  chatApi(ws ,messageDto).then((response) => {
                     sendMessage(response.response, true);
-                  });
+                  }).then(() => setIsTyping(false));
                 }
               }}
             />
@@ -57,12 +66,17 @@ const ChatApp = () => {
                 <Card
                   key={index}
                   className="cursor-pointer ring-offset-background hover:outline-none hover:ring-1 hover:ring-ring hover:ring-offset-2"
-                  onClick={() => {
+                  onClick={async () => {
                     const message = question;
                     const title = message.slice(0, 20);
-                    createChat(title);
+                    const newChatId = await createChat(title);;
                     sendMessage(message);
-                    chatApi(ws, message).then((response) => {
+                    const messageDto: MessageDto = {
+                      conversationId: newChatId,
+                      question: message,
+                      flowType: flow
+                    }
+                    chatApi(ws, messageDto).then((response) => {
                       sendMessage(response.response, true);
                     });
                   }}
@@ -75,7 +89,7 @@ const ChatApp = () => {
             </div>
           </div>
         ) : (
-          <ChatWindow ws={ws}/>
+          <ChatWindow ws={ws} isTyping={isTyping} setIsTyping={setIsTyping} />
         )}
       </main>
       <OnboardingModal

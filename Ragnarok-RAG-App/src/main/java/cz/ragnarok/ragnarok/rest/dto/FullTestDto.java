@@ -11,11 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public class TestDto {
-    private String question;
-    private String answer;
-    private String expectedAnswer;
-    private String middleStep;
-    private List<DocumentsResponseDto> documents;
-
+public class FullTestDto {
+    private List<TestDto> classic;
+    private List<TestDto> paraphrase;
+    private List<TestDto> keyword;
 }
