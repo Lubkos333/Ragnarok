@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, ThumbsUp, ThumbsDown, ListRestart } from "lucide-react";
-import { chatApi } from "@/services/api/chatApi";
+import { Send, /*ThumbsUp, ThumbsDown, ListRestart*/ } from "lucide-react";
+import { AnswerDto, chatApi, MessageDto } from "@/services/api/chatApi";
 import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWebSocket } from "@/services/websocket";
+import { CiteMessage } from "./cite-message";
+import { UsedFlow } from "./used-flow";
 
 export interface ChatWindowProps {
   ws: ChatWebSocket;
+  isTyping: boolean;
+  setIsTyping: Dispatch<SetStateAction<boolean>>;
 }
 
 export function ChatWindow(props: ChatWindowProps) {
-  const { ws } = props;
+  const { ws, isTyping, setIsTyping } = props;
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  //const [isTyping, setIsTyping] = useState(typing);
   const sendMessage = useChatStore((state) => state.sendMessage);
   const chats = useChatStore((state) => state.chats);
+  const flow = useChatStore((state) => state.flow);
   const activeChatId = useChatStore((state) => state.activeChatId);
 
   const currentChat = chats.find((chat) => chat.id === activeChatId);
@@ -28,7 +33,12 @@ export function ChatWindow(props: ChatWindowProps) {
     if (input.trim()) {
       sendMessage(input);
       setIsTyping(true);
-      chatApi(ws, input).then((response) => {
+      const messageDto: MessageDto = {
+          conversationId: activeChatId as string,
+          question: input,
+          flowType: flow
+        }
+      chatApi(ws, messageDto).then((response) => {
         setInput("");
         setIsTyping(false);
         sendMessage(response.response, true);
@@ -53,11 +63,17 @@ export function ChatWindow(props: ChatWindowProps) {
                   : "bg-background text-foreground"
               }`}
             >
-              {message.text}
+            {
+              message.sender === "user"
+              ? <div className="whitespace-pre-wrap">{message.text}</div>
+              : <div className="whitespace-pre-wrap">
+                {(JSON.parse(message.text) as AnswerDto).answer}
+              </div>
+            }
             </div>
             {message.sender === "ragnarok" && (
               <div className="mt-1 flex justify-start space-x-2">
-                <Button
+                {/* <Button
                   className=" hover:bg-background"
                   variant="ghost"
                   size="icon"
@@ -80,7 +96,9 @@ export function ChatWindow(props: ChatWindowProps) {
                   title="Znovu vygenerovat odpověď"
                 >
                   <ListRestart className="h-4 w-4" />
-                </Button>
+                </Button> */}
+                <UsedFlow text= {(JSON.parse(message.text) as AnswerDto).flow}/>
+                <CiteMessage text= {(JSON.parse(message.text) as AnswerDto).paragraphs} />
               </div>
             )}
           </div>
