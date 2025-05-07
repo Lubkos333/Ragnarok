@@ -9,10 +9,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/lib/stores/chatStore";
+import { Waypoints } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const ChatLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const chats = useChatStore((state) => state.chats);
   const activeChatId = useChatStore((state) => state.activeChatId);
+  const setFlow = useChatStore((state) => state.setFlow);
+  const flow = useChatStore((state) => state.flow);
 
   const currentChat = chats.find((chat) => chat.id === activeChatId);
 
@@ -29,6 +33,26 @@ const ChatLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
                 <span>
                   {currentChat ? currentChat.title : "No active chat"}
                 </span>
+              </div>
+              <div className="ml-auto pr-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Waypoints className="h-5 w-5"/>
+                </DropdownMenuTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className={`cursor-pointer ${flow === "CLASSIC" ? "bg-primary text-primary-foreground": "bg-white"}`} onSelect={() => setFlow("CLASSIC")}>
+                      {"Classic flow"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className={`cursor-pointer ${flow === "KEYWORDS" ? "bg-primary text-primary-foreground": "bg-white"}`} onSelect={() => setFlow("KEYWORDS")}>
+                      {"Keywords flow"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className={`cursor-pointer ${flow === "PARAPHRASE" ? "bg-primary text-primary-foreground": "bg-white"}`} onSelect={() => setFlow("PARAPHRASE")}>
+                      {"Paraphrase flow"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                  </DropdownMenuPortal>
+                </DropdownMenu>
               </div>
             </header>
             {children}
