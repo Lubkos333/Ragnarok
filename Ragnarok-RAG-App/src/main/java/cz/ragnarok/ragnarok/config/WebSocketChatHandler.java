@@ -1,7 +1,11 @@
 package cz.ragnarok.ragnarok.config;
 
-import cz.ragnarok.ragnarok.service.VectorDBService;
-import org.springframework.ai.chat.client.ChatClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.ragnarok.ragnarok.rest.dto.AnswerDto;
+import cz.ragnarok.ragnarok.rest.dto.MessageDto;
+import cz.ragnarok.ragnarok.rest.enums.FlowType;
+import cz.ragnarok.ragnarok.service.FlowService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -9,47 +13,43 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
+@Slf4j
 public class WebSocketChatHandler extends TextWebSocketHandler {
 
     @Autowired
-    private ChatClient chatClient;
+    private FlowService flowService;
 
-    @Autowired
-    private VectorDBService vectorDBService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-        String documents = getDocumentsString(message.getPayload());
+        try {
 
-        String prompt = buildRAGPrompt(message.getPayload(), documents);
+            MessageDto receivedMessage = objectMapper.readValue(message.getPayload(), MessageDto.class);
 
-        String response = ollamaUniqueQuestion(prompt);
+            if(receivedMessage.getNumberOfParagraphs() == null) {
+                receivedMessage.setNumberOfParagraphs(15);
+            }
+            if(receivedMessage.getFlowType() == null) {
+                receivedMessage.setFlowType(FlowType.CLASSIC);
+            }
 
-        session.sendMessage(new TextMessage(response));
+            AnswerDto response;
+
+
+            switch (receivedMessage.getFlowType()) {
+                case CLASSIC -> response = flowService.classicFlow(receivedMessage);
+                case KEYWORDS -> response = flowService.keyWordsFlow(receivedMessage);
+                case PARAPHRASE -> response = flowService.paraphraseFlow(receivedMessage, 0);
+                default -> response = flowService.classicFlow(receivedMessage);
+            }
+
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
+        }
+        catch (Exception e) {
+            session.sendMessage(new TextMessage("Omlouváme se, došlo k přerušení spojení. Zkuste prosím dotaz odeslat znovu nebo otevřete nové okno chatu."));
+        }
     }
 
-    private String getDocumentsString(String query) {
-        return String.join("\n",
-                vectorDBService.search(query)
-                        .stream()
-                        .map(
-                    doc -> doc.getContent()
-                        ).toList()
-        );
-    }
-
-    private String buildRAGPrompt(String question, String documents) {
-        return "Odpověz uživateli na tuto otázku: \n" +
-                question + "\n" +
-                "Ale Odpověď můžeš čerpat jen z těchto informací: \n" +
-                documents;
-    }
-
-    private String ollamaUniqueQuestion(String question) {
-        return chatClient.prompt()
-                .user(question)
-                .call()
-                .content();
-    }
 }

@@ -3,8 +3,38 @@ port: 7777
 server:
   port: ${port}
 
+vector-db:
+  address: http://is-vector-db.dyn.cloud.e-infra.cz
+  collection-id: e14385e1-c1a7-4e8e-9eaa-ac013d1d0884
+  collection-name: SpringAiCollection
+
+#vector-db:
+#  collection-id: 428800ff-250f-4dae-af81-55ca47aa691c
+#  collection-name: SpringAiCollectionTest
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
 spring:
   ai:
+    openai:
+      api-key: sk-962b293a5578425784b8c4bd4ab79d09
+      base-url: https://chat.ai.e-infra.cz/
+      embedding:
+        base-url: https://vllm.ai.e-infra.cz
+#        embeddings-path: /api/embeddings
+        options:
+          model: multilingual-e5-large-instruct
+          #model: mxbai-embed-large:latest
+          #model: gritlm-7b:latest
+      chat:
+#        embeddings-path: /api/embeddings
+        completions-path: /api/chat/completions
+        options:
+          model: llama3.3:latest
+          httpHeaders:
+            Authorization: Bearer sk-962b293a5578425784b8c4bd4ab79d09
     #vectorstore:
     #  chroma:
     #    client:
@@ -15,21 +45,22 @@ spring:
     #      password: <your password (if configure)>
     #    initialize-schema: true
     #    collection-name: default_collection
-    embedding:
-      service: ollama
-    ollama:
-      model: Llama3.3
-      init:
-        pull-model-strategy: always
-        embedding:
-          additional-models:
-            #- mxbai-embed-large
-            - nomic-embed-text
-        chat:
-          additional-models:
-            - Llama3.3
-      chat:
-        options:
-          model: Llama3.3
-        model: Llama3.3
-      base-url: http://ollama.dyn.cloud.e-infra.cz/
+#    embedding:
+#      service: ollama
+#    ollama:
+#      model: Llama3.3
+#      init:
+#        pull-model-strategy: always
+#        embedding:
+#          additional-models:
+#            - mxbai-embed-large
+            #- nomic-embed-text
+#        chat:
+#          additional-models:
+#            - Llama3.3
+#      chat:
+#        options:
+#          model: Llama3.3
+#        model: Llama3.3
+#      #base-url: http://ollama.dyn.cloud.e-infra.cz/
+#      base-url: http://ollama.dyn.cloud.e-infra.cz/

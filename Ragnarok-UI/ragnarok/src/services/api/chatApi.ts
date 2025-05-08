@@ -1,6 +1,20 @@
 import { ChatWebSocket } from "../websocket";
 
-export const chatApi = async (ws: ChatWebSocket,message: string): Promise<{ response: string }> => {
+export type FlowType = 'KEYWORDS' | 'CLASSIC' | 'PARAPHRASE';
+export interface MessageDto {
+  question: string;
+  conversationId: string;
+  flowType: FlowType;
+  numberOfParagraphs: number;
+}
+
+export interface AnswerDto {
+  answer: string;
+  paragraphs: string;
+  flow: FlowType;
+}
+
+export const chatApi = async (ws: ChatWebSocket,message: MessageDto): Promise<{ response: string }> => {
 
   return new Promise((resolve, reject) => {
     try {
@@ -12,7 +26,7 @@ export const chatApi = async (ws: ChatWebSocket,message: string): Promise<{ resp
         }
       });
 
-      ws.sendMessage(message);
+      ws.sendMessage(JSON.stringify(message));
     } catch (error) {
       reject(error);
     }
