@@ -117,7 +117,7 @@ public class MongoUtils {
     }
     
     public JsonNode getRelatedDocuments(String designation)  throws JsonProcessingException, DocumentNotFoundException {
-        Document baseDoc = getMongoCollection(config.MONGO_COLLECTION_AKTY_ZNENI)
+        Document baseDoc = getMongoCollection(config.MONGO_COLLECTION_AKTY_FINAL)
             .find(Filters.eq(PARAM_DESIGNATION_VALUE, designation))
             .first();
 
