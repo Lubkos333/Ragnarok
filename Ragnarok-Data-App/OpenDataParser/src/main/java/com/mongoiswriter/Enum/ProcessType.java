@@ -10,6 +10,5 @@ package com.mongoiswriter.Enum;
  * @author brune
  */
 public enum ProcessType {
-    ZNENI,
-    TERMIN
+    ZNENI
 }
