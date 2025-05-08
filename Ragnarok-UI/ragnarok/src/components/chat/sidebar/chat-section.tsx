@@ -16,13 +16,23 @@ import { Separator } from "@radix-ui/react-separator";
 
 export function ChatSection({ chats }: { chats: Chat[] }) {
   const setActiveChat = useChatStore((state) => state.setActiveChat);
+  const isTyping = useChatStore((state) => state.isTyping);
+
+  const handleSetActiveChat = (chatId: string | null) => {
+    if (!isTyping) 
+      setActiveChat(chatId);
+    
+  };
 
   return (
-    <SidebarGroup>
+    <SidebarGroup >
       <SidebarGroupLabel>Chaty</SidebarGroupLabel>
-      <SidebarMenu>
+      <SidebarMenu >
         <SidebarMenuItem>
-          <SidebarMenuButton onClick={() => setActiveChat(null)}>
+          <SidebarMenuButton 
+            className={`${isTyping?"cursor-not-allowed":""}`}
+            onClick={() => handleSetActiveChat(null)}
+            >
             <PlusCircle />
             Nový Chat
           </SidebarMenuButton>
@@ -31,16 +41,15 @@ export function ChatSection({ chats }: { chats: Chat[] }) {
         {chats.map((chat) => (
           <SidebarMenuItem key={chat.id}>
             <SidebarMenuButton
-              onClick={() => {
-                setActiveChat(chat.id);
-              }}
+              className={`${isTyping?"cursor-not-allowed":""}`}
+              onClick={() => handleSetActiveChat(chat.id)}
             >
               <MessageSquareMore />
               {chat.title}
             </SidebarMenuButton>
             <SidebarMenuSub />
           </SidebarMenuItem>
-        ))}
+        )).reverse()}
       </SidebarMenu>
     </SidebarGroup>
   );

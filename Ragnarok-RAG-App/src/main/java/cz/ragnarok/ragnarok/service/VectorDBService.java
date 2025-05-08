@@ -17,12 +17,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -99,10 +95,10 @@ public class VectorDBService {
         return doc;
     }
 
-    public List<Document> search(String query) {
+    public List<Document> search(String query, Integer numberOfParagraphs) {
         return vectorStore.similaritySearch(
                 SearchRequest.defaults()
-                        .withTopK(10)
+                        .withTopK(numberOfParagraphs)
                         .withQuery(query)
                         .withSimilarityThreshold(0.5)
         );
