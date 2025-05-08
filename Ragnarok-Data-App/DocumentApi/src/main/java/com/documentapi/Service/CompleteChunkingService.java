@@ -182,12 +182,12 @@ public class CompleteChunkingService {
 
         String[] lines = pdfText.split("\\r?\\n");
 
-        String lastMain = null;     // "ČÁST"
-        String lastHead = null;     // "HLAVA"
-        String lastPart = null;     // "Díl"
-        String lastSection = null;  // "Oddíl"
-        String lastTitle = null;    // e.g. style 10 or 26 in DOCX, but here we detect text
-        String lastSubtitle = null; // style 23 in DOCX, or your PDF equivalent
+        String lastMain = null;     
+        String lastHead = null;     
+        String lastPart = null;     
+        String lastSection = null; 
+        String lastTitle = null;   
+        String lastSubtitle = null; 
 
         boolean nextLineIsMain = false;
         boolean nextLineIsHead = false;
@@ -284,11 +284,11 @@ public class CompleteChunkingService {
             debugPrintParagraphStyles(document);
             List<XWPFParagraph> paragraphs = document.getParagraphs();
 
-            String lastMain    = null; // "ČÁST"
-            String lastHead    = null; // "HLAVA"
-            String lastPart    = null; // "Díl"
-            String lastSection = null; // "Oddíl"
-            String lastTitle   = null; // style 10/26
+            String lastMain    = null; 
+            String lastHead    = null;
+            String lastPart    = null; 
+            String lastSection = null; 
+            String lastTitle   = null; 
 
             boolean nextParIsHead = false;
             boolean nextParIsPart = false;
