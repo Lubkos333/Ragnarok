@@ -7,9 +7,7 @@ import { FlowType } from "@/services/api/chatApi";
 
 interface ChatState {
   chats: Chat[];
-  activeChatId: string | null; // Currently selected chat
-  // activeChat: Chat | null;
-
+  activeChatId: string | null;
   isTyping: boolean;
   isConnected: boolean;
   flow: FlowType;
@@ -18,7 +16,6 @@ interface ChatState {
   setFlow: (flow: FlowType) => void;
   setIsTyping: (isTyping: boolean) => void;
   setIsconnected: (isConnected: boolean) => void;
-
   createChat: (title: string) => string;
   deleteChat: (id: string) => void;
   setActiveChat: (id: string | null) => void;
@@ -30,15 +27,11 @@ export const useChatStore = create(
     (set, get) => ({
       chats: [],
       activeChatId: null,
-
       flow: "PARAPHRASE",
       numberOfParagraphs: 20,
       isTyping: false,
       isConnected: false,
 
-      // activeChat: null,
-
-      // Create a new chat with a unique ID
       createChat: (title) => {
         const newChat: Chat = {
           id: uuidv4(),
@@ -53,23 +46,19 @@ export const useChatStore = create(
         return newChat.id
       },
 
-      // Delete a chat by its ID
       deleteChat: (id) => {
         set((state) => ({
           chats: state.chats.filter((chat) => chat.id !== id),
-          activeChatId: state.activeChatId === id ? null : state.activeChatId, // Deselect if deleted
+          activeChatId: state.activeChatId === id ? null : state.activeChatId,
         }));
       },
 
-      // Set the currently active chat
       setActiveChat: (id) => {
-        set((/*state*/) => ({
-          // activeChat: state.chats.find((chat) => chat.id === id) || null,
+        set(() => ({
           activeChatId: id,
         }));
       },
 
-      // Send a message to the active chat
       sendMessage: (text, serverResponse) => {
         const { activeChatId, chats } = get();
         if (!activeChatId) return;
@@ -93,31 +82,27 @@ export const useChatStore = create(
         });
       },
       setFlow: (flow: FlowType) => {
-
-        set((/*state*/) => ({
-          // activeChat: state.chats.find((chat) => chat.id === id) || null,
+        set(() => ({
           flow: flow,
         }));
-
       },
 
       setNumberOfParagraphs: (numberOfParagraphs: number) => {
-        set((/*state*/) => ({
+        set(() => ({
           numberOfParagraphs: numberOfParagraphs,
         }));
       },
 
       setIsTyping: (isTyping: boolean) => {
-        set((/*state*/) => ({
+        set(() => ({
           isTyping: isTyping,
         }));
       },
 
       setIsconnected: (isConnected: boolean) => {
-        set((/*state*/) => ({
+        set(() => ({
           isConnected: isConnected,
         }));
-
       }
 
     }),
