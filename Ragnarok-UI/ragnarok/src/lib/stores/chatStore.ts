@@ -9,6 +9,7 @@ interface ChatState {
   chats: Chat[];
   activeChatId: string | null; // Currently selected chat
   // activeChat: Chat | null;
+
   isTyping: boolean;
   isConnected: boolean;
   flow: FlowType;
@@ -17,6 +18,7 @@ interface ChatState {
   setFlow: (flow: FlowType) => void;
   setIsTyping: (isTyping: boolean) => void;
   setIsconnected: (isConnected: boolean) => void;
+
   createChat: (title: string) => string;
   deleteChat: (id: string) => void;
   setActiveChat: (id: string | null) => void;
@@ -28,10 +30,12 @@ export const useChatStore = create(
     (set, get) => ({
       chats: [],
       activeChatId: null,
+
       flow: "PARAPHRASE",
       numberOfParagraphs: 20,
       isTyping: false,
       isConnected: false,
+
       // activeChat: null,
 
       // Create a new chat with a unique ID
@@ -89,10 +93,12 @@ export const useChatStore = create(
         });
       },
       setFlow: (flow: FlowType) => {
+
         set((/*state*/) => ({
           // activeChat: state.chats.find((chat) => chat.id === id) || null,
           flow: flow,
         }));
+
       },
 
       setNumberOfParagraphs: (numberOfParagraphs: number) => {
@@ -111,6 +117,7 @@ export const useChatStore = create(
         set((/*state*/) => ({
           isConnected: isConnected,
         }));
+
       }
 
     }),

@@ -9,6 +9,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/lib/stores/chatStore";
+
 import { Pilcrow, Waypoints } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -18,9 +19,9 @@ const ChatLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const activeChatId = useChatStore((state) => state.activeChatId);
   const setFlow = useChatStore((state) => state.setFlow);
   const flow = useChatStore((state) => state.flow);
-
   const setNumberOfParagraphs = useChatStore((state) => state.setNumberOfParagraphs);
   const numberOfParagraphs = useChatStore((state) => state.numberOfParagraphs);
+
 
   const currentChat = chats.find((chat) => chat.id === activeChatId);
 
@@ -38,6 +39,7 @@ const ChatLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
                   {currentChat ? currentChat.title : "No active chat"}
                 </span>
               </div>
+
               <div className="flex gap-4 ml-auto pr-4">
                 <div className="">
                   <DropdownMenu>

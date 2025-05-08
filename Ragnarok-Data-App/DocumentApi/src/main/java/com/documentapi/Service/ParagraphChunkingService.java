@@ -139,10 +139,7 @@ public class ParagraphChunkingService {
                     lastTitle = line;
                 }
 
-            
-            
-
-            if (line.matches("^§\\s\\d+(\\s.{1,2})?$")) {
+            if (line.matches("^§\\s\\d+[A-Za-z]?$")){
                 finalizeChunk(currentChunk, currentContent, chunks);
                 currentChunk = openNewChunk(lastTitle, line);
                 currentContent.setLength(0);
@@ -185,7 +182,7 @@ public class ParagraphChunkingService {
                 }
 
 
-                if (text.matches("^§\\s\\d+(\\s.{1,2})?$")) {
+                if (text.matches("^§\\s\\d+[A-Za-z]?$")) {
                     finalizeChunk(currentChunk, currentContent, chunks);
                     currentChunk = openNewChunk(lastTitle, text);
                     currentContent.setLength(0);
