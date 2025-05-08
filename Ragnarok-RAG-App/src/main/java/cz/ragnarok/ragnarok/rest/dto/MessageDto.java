@@ -14,4 +14,5 @@ public class MessageDto {
     private String question;
     private String conversationId;
     private FlowType flowType;
+    private Integer numberOfParagraphs;
 }
