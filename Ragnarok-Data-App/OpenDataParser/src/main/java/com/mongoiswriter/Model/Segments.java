@@ -14,12 +14,6 @@ public class Segments {
     private final String typSbirky;
     private final String cisloAktu;
 
-    /**
-     * Constructs a Segments object with the specified typSbirky and cisloAktu.
-     *
-     * @param typSbirky The type of sbirka (e.g., "sb").
-     * @param cisloAktu  The combination of rokAktu and cisloAktu (e.g., "1995/104").
-     */
     public Segments(String typSbirky, String cisloAktu) {
         if (typSbirky == null || typSbirky.trim().isEmpty()) {
             throw new IllegalArgumentException("typSbirky cannot be null or empty.");
@@ -46,6 +40,4 @@ public class Segments {
                 ", cisloAktu='" + cisloAktu + '\'' +
                 '}';
     }
-
-    // Optionally, override equals() and hashCode() if needed for collections or comparisons.
 }
