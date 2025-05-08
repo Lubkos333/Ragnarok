@@ -16,7 +16,6 @@ import com.documentapi.Model.CompleteDocument;
 import com.documentapi.Service.CompleteChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.documentapi.Service.ParagraphChunkingService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -114,9 +113,6 @@ public class ProcessingController {
         @RequestHeader("Authorization") String token,
         @Parameter(description = "Designation of document", example = "89/2012 Sb.") 
         @RequestParam("designation") String designation) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
             if(helperService.isTokenValid(token)){
                 List <CompleteChunk> response;
                 try {
@@ -126,7 +122,7 @@ public class ProcessingController {
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
                 catch (IOException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
@@ -184,9 +180,6 @@ public class ProcessingController {
         @RequestHeader("Authorization") String token,
         @Parameter(description = "Designation of document", example = "89/2012 Sb.") 
         @RequestParam("designation") String designation) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
             if(helperService.isTokenValid(token)){
                 List <Chunk> response;
                 try {
@@ -196,7 +189,7 @@ public class ProcessingController {
                      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ProcessingController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 }
                 catch (IOException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
@@ -241,9 +234,6 @@ public class ProcessingController {
         @RequestHeader("Authorization") String token,
         @Parameter(description = "Designation of document", example = "89/2012 Sb.") 
         @RequestParam("designation") String designation) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
             if(helperService.isTokenValid(token)){
                 CompleteDocument response;
                 try {
