@@ -11,10 +11,6 @@ package com.mongoiswriter.Enum;
  */
 public enum ExtracterType {
     PRAVNI_AKT,
-    TERMIN_NAZEV,
-    TERMIN_DEFINICE,
-    TERMIN_VAZBA,
-    PRAVNI_AKT_VAZBA,
     NONE
     
 }
