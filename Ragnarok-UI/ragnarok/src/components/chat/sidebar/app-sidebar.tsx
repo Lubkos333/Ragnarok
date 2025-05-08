@@ -20,7 +20,6 @@ import {
 import { NavUser } from "./nav-user";
 import Link from "next/link";
 
-// Chat section items.
 const initialItems = {
   chatSection: [
     {

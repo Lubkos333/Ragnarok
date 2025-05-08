@@ -1,10 +1,7 @@
 package cz.ragnarok.ragnarok.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.ragnarok.ragnarok.rest.dto.ChromaDbQueryEntity;
-import cz.ragnarok.ragnarok.rest.dto.ChromaDbResponseEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
@@ -17,12 +14,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component
-public class Test {
+public class SearchService {
 
     @Autowired
     @Qualifier("chromaDb")
@@ -102,19 +98,11 @@ public class Test {
                 .toList();
 
         Map<String,StringBuilder> textByPara = new LinkedHashMap<>();
-        for (Document c : chunks) {
-            String pid = c.getMetadata().get("paragraph").toString();
-            if (!topParas.contains(pid)) continue;
-            textByPara.computeIfAbsent(pid, k->new StringBuilder())
-                    .append(c.getFormattedContent()).append("\n");
-        }
-
-        Map<String,StringBuilder> textByPara2 = new LinkedHashMap<>();
         Map<String,Map<String, Object>> metadata = new LinkedHashMap<>();
         for (Document c : chunks) {
             String pid = c.getMetadata().get("paragraph").toString();
             if (!topParas.contains(pid)) continue;
-            textByPara2.computeIfAbsent(pid, k->new StringBuilder())
+            textByPara.computeIfAbsent(pid, k->new StringBuilder())
                     .append(c.getContent()).append("\n");
             if(!metadata.containsKey(pid)){
                 metadata.put(pid, c.getMetadata());
@@ -122,8 +110,7 @@ public class Test {
         }
 
         List<Document> results = new ArrayList<>();
-        for (var entry : textByPara2.entrySet()) {
-            //Map<String,Object> meta = Map.of("paragraph", entry.getKey());
+        for (var entry : textByPara.entrySet()) {
             results.add(new Document(entry.getValue().toString(), metadata.get(entry.getKey())));
         }
         return results;
@@ -153,40 +140,6 @@ public class Test {
             nb  += b[i]*b[i];
         }
         return dot/Math.sqrt(na*nb);
-    }
-
-    public ChromaDbResponseEntity parseAndFlatten(String json) throws IOException {
-        JsonNode root = mapper.readTree(json);
-
-        // extract inner arrays
-        JsonNode idsNode        = root.get("ids").get(0);
-        JsonNode docsNode       = root.get("documents").get(0);
-        JsonNode urisNode       = root.get("uris").get(0);
-        JsonNode dataNode       = root.get("data").get(0);
-        JsonNode metasNode      = root.get("metadatas").get(0);
-        JsonNode includeNode    = root.get("included").get(0);
-        JsonNode embsOuterNode  = root.get("embeddings").get(0);
-
-        // convert to the flat types your DTO declares
-        List<String> ids        = mapper.convertValue(idsNode,    new TypeReference<List<String>>() {});
-        List<String> docs       = mapper.convertValue(docsNode,   new TypeReference<List<String>>() {});
-        List<String> uris       = mapper.convertValue(urisNode,   new TypeReference<List<String>>() {});
-        List<String> data       = mapper.convertValue(dataNode,   new TypeReference<List<String>>() {});
-        List<ChromaDbResponseEntity.Metadata> metas =
-                mapper.convertValue(metasNode,  new TypeReference<List<ChromaDbResponseEntity.Metadata>>() {});
-        List<String> included   = mapper.convertValue(includeNode, new TypeReference<List<String>>() {});
-        List<List<Float>> embs  = mapper.convertValue(embsOuterNode, new TypeReference<List<List<Float>>>() {});
-
-        // build and return your unchanged DTO
-        ChromaDbResponseEntity e = new ChromaDbResponseEntity();
-        e.setIds(ids);
-        e.setDocuments(docs);
-        e.setUris(uris);
-        e.setData(data);
-        e.setMetadatas(metas);
-        e.setIncluded(included);
-        e.setEmbeddings(embs);
-        return e;
     }
 
 

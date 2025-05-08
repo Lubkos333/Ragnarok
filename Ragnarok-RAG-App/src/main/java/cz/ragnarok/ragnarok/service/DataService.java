@@ -27,15 +27,6 @@ public class DataService {
     @Autowired
     private VectorDBService vectorDBService;
 
-    public Mono<List<ChunkDto>> getParagraphsByDesignation(String designation) {
-        return dataClient.get()
-                .uri("/api/processing/getParagraphsByDesignation?designation="+ designation)
-                .header("Authorization", "Bearer testApiKey")
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
-                .timeout(Duration.ofMinutes(5));
-    }
-
     public Mono<List<ChunkDto>> getParagraphsOnlyByDesignation(String designation) {
         return dataClient.get()
                 .uri("/api/processing/getParagraphsOnlyByDesignation?designation="+ designation)
@@ -43,11 +34,6 @@ public class DataService {
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
                 .timeout(Duration.ofMinutes(5));
-    }
-
-    public String test(String designation) {
-        List<ChunkDto> chunks = getParagraphsOnlyByDesignation(designation).block();
-        return chunks.toString();
     }
 
     public Mono<DataByDesignationDto> getDataByDesignation(String designation) {
@@ -122,7 +108,6 @@ public class DataService {
     }
 
     public void saveShortenChunksByDesignation(String designation, LocalDate newDate) {
-        //List<ChunkDto> chunks = getParagraphsByDesignation(designation).block();
         List<ChunkDto> chunks = getParagraphsOnlyByDesignation(designation).block();
         chunks = chunks.stream().toList();
         int chunksSize = chunks.size();
