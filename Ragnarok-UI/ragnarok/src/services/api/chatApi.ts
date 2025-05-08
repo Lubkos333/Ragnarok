@@ -5,6 +5,7 @@ export interface MessageDto {
   question: string;
   conversationId: string;
   flowType: FlowType;
+  numberOfParagraphs: number;
 }
 
 export interface AnswerDto {

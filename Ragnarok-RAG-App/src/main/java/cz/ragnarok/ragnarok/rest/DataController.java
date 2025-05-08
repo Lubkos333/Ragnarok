@@ -3,6 +3,7 @@ package cz.ragnarok.ragnarok.rest;
 import cz.ragnarok.ragnarok.rest.dto.DataPostByDesignation;
 import cz.ragnarok.ragnarok.service.DataService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,9 +19,9 @@ public class DataController {
         return dataService.uploadDocumentByDesignation(designation.getDesignation());
     }
 
-    @PostMapping("api/data/byDesignation/test")
-    public String test(@RequestBody DataPostByDesignation designation) {
-        return dataService.test(designation.getDesignation());
+    @DeleteMapping("api/data/byDesignation")
+    public String deleteDocument(@RequestBody DataPostByDesignation designation) {
+        return dataService.deleteByDesignation(designation.getDesignation());
     }
 
 }

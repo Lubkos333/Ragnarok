@@ -12,7 +12,9 @@ vector-db:
 #  collection-id: 428800ff-250f-4dae-af81-55ca47aa691c
 #  collection-name: SpringAiCollectionTest
 
-
+springdoc:
+  api-docs:
+    path: /api-docs
 
 spring:
   ai:
