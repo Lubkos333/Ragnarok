@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pilcrow } from "lucide-react";
-<<<<<<< HEAD
+
 
 export interface CiteMessageProps {
   text: string
@@ -17,7 +17,7 @@ export function CiteMessage(props: CiteMessageProps) {
     <>
   {show 
     ? <div onClick={() => setShow(!show)} className="inline-block p-2 rounded-lg bg-background text-foreground cursor-pointer"><div className="flex"><div className="pt-1 pl-1 pr-2"><Pilcrow className="h-4 w-4" /></div>{text}</div></div>
-=======
+
 import ReactMarkdown from 'react-markdown';
 
 export interface CiteMessageProps {
@@ -43,7 +43,6 @@ export function CiteMessage(props: CiteMessageProps) {
       </ReactMarkdown>
     </div>
     </div></div>
->>>>>>> origin/main
     : <Button
         className=" hover:bg-background"
         variant="ghost"
