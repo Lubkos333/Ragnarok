@@ -1,16 +1,12 @@
 package cz.ragnarok.ragnarok.rest.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.lang.reflect.Array;
 import java.util.List;
 
 @AllArgsConstructor
@@ -18,15 +14,21 @@ import java.util.List;
 @Data
 @Builder
 public class ChromaDbQueryEntity {
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<String>> ids;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<List<Float>>> embeddings;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<String>> documents;
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<String>> uris;
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<String>> data;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<Metadata>> metadatas;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> included;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<Float>> distances;
 
     @AllArgsConstructor

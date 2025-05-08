@@ -7,11 +7,9 @@ import { OnboardingModal } from "@/components/chat/onboarding-modal";
 import { useOnboardingStore } from "@/lib/stores/onBoardingStore";
 import { chatApi, MessageDto } from "@/services/api/chatApi";
 import { ChatWebSocket } from "@/services/websocket";
-
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
-
 
 const commonQuestions = [
   "Jak se dědí, když někdo nemá závěť?",
@@ -24,11 +22,8 @@ const commonQuestions = [
 
 const ChatApp = () => {
   const {
-    // chats,
     activeChatId,
     createChat,
-    // deleteChat,
-    // setActiveChat,
     sendMessage,
     flow,
   } = useChatStore();
@@ -39,10 +34,7 @@ const ChatApp = () => {
   const isTyping = useChatStore((state) => state.isTyping);
   const setIsTyping = useChatStore((state) => state.setIsTyping);
   const ws = ChatWebSocket.getInstance();
-
-  //const ws = ChatWebSocket.getInstance();
   const isConnected = useChatStore((state) => state.isConnected);
-  //const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if(!isConnected && isTyping) {
@@ -55,7 +47,6 @@ const ChatApp = () => {
       setIsTyping(false);
     }
   }, [isConnected, isTyping, setIsTyping])
-
 
   return (
     <div className="flex-1 flex flex-col w-full bg-muted">
@@ -86,16 +77,13 @@ const ChatApp = () => {
                   const messageDto: MessageDto = {
                     conversationId: newChatId,
                     question: message,
-
                     flowType: flow,
                     numberOfParagraphs: numberOfParagraphs
-
                   }
                   setIsTyping(true);
                   chatApi(ws ,messageDto).then((response) => {
                     sendMessage(response.response, true);
                   }).then(() => setIsTyping(false));
-
                 }}
               }}
             />
@@ -105,7 +93,14 @@ const ChatApp = () => {
                   key={index}
                   className="cursor-pointer ring-offset-background hover:outline-none hover:ring-1 hover:ring-ring hover:ring-offset-2"
                   onClick={async () => {
-
+                    if (!isConnected) {
+                      toast(<div className="flex items-center gap-2 text-red-600 font-semibold">
+                        <span>❌ Spojení s AI selhalo.</span>
+                      </div>, {
+                        closeButton: true,
+                        duration: 3500,
+                      })
+                    }else {
                     const message = question;
                     const title = message.slice(0, 20);
                     const newChatId = await createChat(title);;
@@ -113,12 +108,10 @@ const ChatApp = () => {
                     const messageDto: MessageDto = {
                       conversationId: newChatId,
                       question: message,
-
                       flowType: flow,
                       numberOfParagraphs: numberOfParagraphs,
                     }
                     setIsTyping(true);
-
                     chatApi(ws, messageDto).then((response) => {
                       sendMessage(response.response, true);
                     })
