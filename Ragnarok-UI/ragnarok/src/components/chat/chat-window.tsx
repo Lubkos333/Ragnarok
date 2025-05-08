@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,14 +10,18 @@ import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWebSocket } from "@/services/websocket";
 import { CiteMessage } from "./cite-message";
 import { UsedFlow } from "./used-flow";
+
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
 import { toast } from "sonner";
 
+
 export interface ChatWindowProps {
   ws: ChatWebSocket;
   isTyping: boolean;
+
   setIsTyping: (isTyping: boolean) => void;
+
 }
 
 export function ChatWindow(props: ChatWindowProps) {
@@ -34,6 +38,7 @@ export function ChatWindow(props: ChatWindowProps) {
   const currentChat = chats.find((chat) => chat.id === activeChatId);
 
   const handleSubmit = (e: React.FormEvent) => {
+
     if(!isTyping) {
       e.preventDefault();
       if (input.trim()) {
