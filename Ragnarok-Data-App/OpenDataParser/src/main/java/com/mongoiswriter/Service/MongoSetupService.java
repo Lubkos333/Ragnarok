@@ -5,18 +5,14 @@
  */
 package com.mongoiswriter.Service;
 
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
-import com.mongodb.client.result.UpdateResult;
 import com.mongoiswriter.Configuration.DataSourceConfig;
 import com.mongoiswriter.Configuration.MongoConfig;
 import com.mongoiswriter.Configuration.ProcessConfig;
 import com.mongoiswriter.Enum.ExtracterType;
-import com.mongoiswriter.Enum.VztazenyTermin;
 import com.mongoiswriter.Model.Segments;
 import okhttp3.*;
 import org.bson.Document;
@@ -29,8 +25,6 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.cert.CertificateException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
@@ -47,15 +41,6 @@ public class MongoSetupService {
     private static final OkHttpClient HTTP_CLIENT = createUnsafeOkHttpClient();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
-
-    private static final ConcurrentMap<Integer, String> PDF_ID_CACHE = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Integer, String> DOCX_ID_CACHE = new ConcurrentHashMap<>();
-
-    private static final int MAX_FETCH_ATTEMPTS = 3;
-    private static final int INITIAL_DELAY_MILLIS = 500;
-    
-  
     private final MongoUtils mongoUtils;
     private final StringParser stringParser;
     private final SegmentsExtractionUtil segmentsExtractionUtil;
@@ -80,19 +65,13 @@ public class MongoSetupService {
             try{
                 
                 jsonExtracterUtil.extractFromAddressToMongo(dataSourceConfig.URL_AKTY_ZNENI,mongoConfig.MONGO_COLLECTION_AKTY_ZNENI,ExtracterType.PRAVNI_AKT);
-               // mongoUtils.createCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
                 mongoUtils.createCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
-                
-                //MongoCollection<Document> terminyProcessedCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_TERMINY_FINAL);
+               
             
                 MongoCollection<Document> zneniCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
                 MongoCollection<Document> zneniPravniAktCollection = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_ZNENI);
                 transferNewestDocuments(zneniPravniAktCollection,zneniCollection);
                 
-              //  jsonExtracterUtil.extractFromAddressToMongo(dataSourceConfig.URL_AKTY_VAZBA,mongoConfig.MONGO_COLLECTION_AKTY_VAZBA,ExtracterType.PRAVNI_AKT_VAZBA);
- 
-              //  setRelationsForCollection();
-         
             }
             catch(SocketException e){
                 throw new SocketException("Socket exception. Cannot open socket");
@@ -145,88 +124,7 @@ public class MongoSetupService {
             targetCollection.insertOne(newDoc);
         }
     }
-    
-    private void setRelationsForCollection() {
-        System.out.println("Setting relations started");
-        MongoCollection<Document> collection1 = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL);
-        MongoCollection<Document> collection2 = mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_VAZBA);
-
-        collection1.createIndex(Indexes.ascending("znění-dokument-id"));
-        collection2.createIndex(Indexes.ascending("znění-cíl-dokument-id"));
-        collection2.createIndex(Indexes.ascending("znění-fragment-zdroj.znění-dokument-id"));
-
-        try {
-            List<WriteModel<Document>> updatesForOdkazovanV = new ArrayList<>();
-            List<WriteModel<Document>> updatesForOdkazujeNa = new ArrayList<>();
-
-            int docCount = 0;
-            long totalDocs = collection1.countDocuments();
-            System.out.println("Size: " + totalDocs);
-            
-            for (Document doc1 : collection1.find()) {
-                Integer dokumentId = doc1.getInteger("znění-dokument-id");
-                if (dokumentId == null) {
-                    continue; // Skip if no dokumentId found
-                }
-
-                System.out.println("Processing doc: " + dokumentId);
-
-                Set<Document> matchingIds1 = new HashSet<>();
-                Set<Document> matchingIds2 = new HashSet<>();
-
-                collection2.find(Filters.eq("znění-cíl-dokument-id", dokumentId))
-                    .projection(Projections.include("znění-fragment-zdroj.znění-dokument-id"))
-                    .forEach(doc2 -> {
-                        Document fragmentZdroj = doc2.get("znění-fragment-zdroj", Document.class);
-                        if (fragmentZdroj != null) {
-                            Integer sourceId = fragmentZdroj.getInteger("znění-dokument-id");
-                            if (sourceId != null) {
-                                matchingIds1.add(new Document("znění-dokument-id", sourceId));
-                            }
-                        }
-                    });
-                
-                collection2.find(Filters.eq("znění-fragment-zdroj.znění-dokument-id", dokumentId))
-                    .projection(Projections.include("znění-cíl-dokument-id"))
-                    .forEach(doc2 -> {
-                        Integer targetId = doc2.getInteger("znění-cíl-dokument-id");
-                        if (targetId != null) {
-                            matchingIds2.add(new Document("znění-cíl-dokument-id", targetId));
-                        }
-                    });
-
-                updatesForOdkazovanV.add(
-                    new UpdateOneModel<>(
-                        Filters.eq("znění-dokument-id", dokumentId),
-                        Updates.set("odkazován-v", matchingIds1)
-                    )
-                );
-
-                updatesForOdkazujeNa.add(
-                    new UpdateOneModel<>(
-                        Filters.eq("znění-dokument-id", dokumentId),
-                        Updates.set("odkazuje-na", matchingIds2)
-                    )
-                );
-
-                docCount++;
-                System.out.println("Processed document count: " + docCount + "/" + totalDocs);
-            }
-
-            if (!updatesForOdkazovanV.isEmpty()) {
-                collection1.bulkWrite(updatesForOdkazovanV);
-            }
-            if (!updatesForOdkazujeNa.isEmpty()) {
-                collection1.bulkWrite(updatesForOdkazujeNa);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    
+     
      public void transferNewestDocuments(MongoCollection<Document> sourceCollection, MongoCollection<Document> targetCollection) {
          System.out.println("Transfer neweest documents started");
         try {
@@ -237,47 +135,7 @@ public class MongoSetupService {
          System.out.println("Transfer neweest documents completed");
     }
 
-        private void processTerminDocument(Document docVazba,
-                                       MongoCollection<Document> targetCollection,
-                                       MongoCollection<Document> terminBaseCollection, MongoCollection<Document> terminDefiniceCollection
-                                        ) {
-        try {
-            Integer terminID = getInteger(docVazba, "termín-id");
-            Integer terminDefiniceID = getInteger(docVazba, "definice-termínu-id");
-            logger.info("termín-id = " + terminID);
-            logger.info("definice-termínu-id = " + terminDefiniceID);
-           Document terminBase = mongoUtils.findInCollection(terminBaseCollection, "termín-id", terminID);
-           Document terminDefinice = mongoUtils.findInCollection(terminDefiniceCollection, "definice-termínu-id", terminDefiniceID);
           
-            
-            Document newDoc = createVazbaDocument(terminID, terminDefiniceID,
-                    terminBase.get("termín-název").toString(),terminDefinice.get("definice-termínu-text").toString(),
-                    getZneniDokumentIdsById(terminDefinice,terminDefiniceID,"definice-termínu-vazba","právní-akt-znění-fragment"));
-            
-            targetCollection.insertOne(newDoc);
-            logger.info("Inserted new document with termin-id {}.", terminID);
-        } catch (Exception e) {
-            logger.error("Failed to process document: {}", e.getMessage());
-        }
-    }
-        
-        
-   public List<VztazenyTermin> getListOfTermsForDocument(Document doc, MongoCollection<Document> targetCollection, String keyName){
-       List<VztazenyTermin> vztazeneTerminy = new ArrayList();
-       FindIterable<Document> result = targetCollection.find(
-                Filters.elemMatch("vztazene-dokumenty", Filters.eq("znění-dokument-id", doc.get(keyName)))
-        );
-       
-       for (Document foundDoc : result){
-           VztazenyTermin termin = new VztazenyTermin(foundDoc.get("termin-nazev").toString(),
-                   stringParser.extractFormattedText(foundDoc.get("termin-definice").toString()));
-           vztazeneTerminy.add(termin);
-       }
-       
-     return vztazeneTerminy;
-       
-   }
-        
    public List<Integer> getZneniDokumentIdsById(Document doc, Integer definiceTerminuId,String firstArrayName, String secondArrayName) {
         List<Integer> zneniDokumentIds = new ArrayList<>();
         try {
@@ -322,15 +180,6 @@ public class MongoSetupService {
         return dokumentPairs;
     }
     
-    public static List<Document> createArrayContainingTerms(List<VztazenyTermin> terminy) {
-        if (terminy == null || terminy.isEmpty()) {
-            return null; 
-        }
-        return terminy.stream()
-                .map(termin -> new Document("termin-nazev", termin.getVztazenyTerminNazev())
-                                      .append("termin-popis", termin.getVztazenyTerminText()))
-                .collect(Collectors.toList());
-    }
     
     private Document createZneniDocument(Integer zneniDokumentId, Integer zneniBaseId, String aktNazevVyhlasen,
                                            String cisEsbTypZneniPoložka, String zneniDatumUcinnostiOdStr,
@@ -348,17 +197,6 @@ public class MongoSetupService {
         return doc;
     }
    
-     private Document createVazbaDocument(Integer terminID, Integer terminDefiniceID, String terminName, String definiceText,
-                                           List<Integer> vztazeneDokumenty) {
-        Document doc = new Document("termín-id", terminID)
-                .append("definice_termínu-id", terminDefiniceID)
-                .append("termin-nazev", terminName)
-                .append("termin-definice", definiceText)
-                .append("vztazene-dokumenty",createArrayContainingPairs("znění-dokument-id", vztazeneDokumenty));
-               
-           return doc;
-    }
-
     private static Integer getInteger(Document doc, String key) {
         Object value = doc.get(key);
         if (value instanceof Number) {
@@ -371,20 +209,6 @@ public class MongoSetupService {
             }
         }
         return null;
-    }
-
-    private static Date parseDate(String dateString) {
-        try {
-            DATE_FORMAT.get().setLenient(false);
-             return DATE_FORMAT.get().parse(dateString.trim());
-       } catch (ParseException e) {
-           logger.error("ParseException - Invalid date format: {}", dateString, e);
-           return null;
-       } catch (Exception e) {
-           logger.error("Exception while parsing date: {}", dateString, e);
-           return null;
-       }
-        
     }
 
     private static OkHttpClient createUnsafeOkHttpClient() {
