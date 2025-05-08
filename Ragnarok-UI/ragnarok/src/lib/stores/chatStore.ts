@@ -9,8 +9,16 @@ interface ChatState {
   chats: Chat[];
   activeChatId: string | null; // Currently selected chat
   // activeChat: Chat | null;
+
+  isTyping: boolean;
+  isConnected: boolean;
   flow: FlowType;
+  numberOfParagraphs: number;
+  setNumberOfParagraphs: (numberOfParagraphs: number) => void;
   setFlow: (flow: FlowType) => void;
+  setIsTyping: (isTyping: boolean) => void;
+  setIsconnected: (isConnected: boolean) => void;
+
   createChat: (title: string) => string;
   deleteChat: (id: string) => void;
   setActiveChat: (id: string | null) => void;
@@ -22,7 +30,12 @@ export const useChatStore = create(
     (set, get) => ({
       chats: [],
       activeChatId: null,
-      flow: "CLASSIC",
+
+      flow: "PARAPHRASE",
+      numberOfParagraphs: 20,
+      isTyping: false,
+      isConnected: false,
+
       // activeChat: null,
 
       // Create a new chat with a unique ID
@@ -80,11 +93,31 @@ export const useChatStore = create(
         });
       },
       setFlow: (flow: FlowType) => {
-        console.log("FLOW:" , flow)
+
         set((/*state*/) => ({
           // activeChat: state.chats.find((chat) => chat.id === id) || null,
           flow: flow,
         }));
+
+      },
+
+      setNumberOfParagraphs: (numberOfParagraphs: number) => {
+        set((/*state*/) => ({
+          numberOfParagraphs: numberOfParagraphs,
+        }));
+      },
+
+      setIsTyping: (isTyping: boolean) => {
+        set((/*state*/) => ({
+          isTyping: isTyping,
+        }));
+      },
+
+      setIsconnected: (isConnected: boolean) => {
+        set((/*state*/) => ({
+          isConnected: isConnected,
+        }));
+
       }
 
     }),
@@ -93,3 +126,5 @@ export const useChatStore = create(
     }
   )
 );
+
+export const chatStore = useChatStore;
