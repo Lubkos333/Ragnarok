@@ -18,16 +18,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationPropertiesScan
 @EnableAsync
 public class DataSourceConfig {
-    @Value("${sbirka.url.terminy.base}")
-    public String URL_TERMINY_BASE;
-    @Value("${sbirka.url.terminy.popis}")
-    public String URL_TERMINY_POPIS;   
-    @Value("${sbirka.url.terminy.vazba}")
-    public String URL_TERMINY_VAZBA;
     @Value("${sbirka.url.akty.zneni}")
     public String URL_AKTY_ZNENI; 
-    @Value("${sbirka.url.akty.vazba}")
-    public String URL_AKTY_VAZBA; 
     @Value("${sbirka.documents.number}")
     public int DOCUMENTS_NUMBER;
 }
