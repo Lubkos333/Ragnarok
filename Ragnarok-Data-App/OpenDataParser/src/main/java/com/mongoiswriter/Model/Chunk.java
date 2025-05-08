@@ -10,11 +10,10 @@ package com.mongoiswriter.Model;
  * @author brune
  */
 public class Chunk {
-    private String title; // Document title
-    private String subTitle; // Current subtitle
-    private String content; // Paragraph content
+    private String title;
+    private String subTitle;
+    private String content;
 
-    // Constructors
     public Chunk() {}
 
     public Chunk(String title, String subTitle, String content) {

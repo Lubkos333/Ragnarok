@@ -8,7 +8,6 @@ import com.documentapi.Configuration.KeywordsConfig;
 import com.documentapi.Configuration.StyleConfig;
 import com.documentapi.Exception.UnsupportedFileTypeException;
 import com.documentapi.Model.Chunk;
-import com.documentapi.Model.CompleteChunk;
 import com.documentapi.Model.CompleteDocument;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -20,9 +19,6 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.ooxml.POIXMLProperties;
@@ -122,7 +118,7 @@ public class ParagraphChunkingService {
 
         String[] lines = pdfText.split("\\r?\\n");
 
-        String lastTitle = null;    // e.g. style 10 or 26 in DOCX, but here we detect text
+        String lastTitle = null;    
 
 
         Chunk currentChunk = new Chunk();
