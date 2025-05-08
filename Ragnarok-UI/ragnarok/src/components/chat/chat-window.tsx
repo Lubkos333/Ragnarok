@@ -1,10 +1,8 @@
-"use client";
-
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, /*ThumbsUp, ThumbsDown, ListRestart*/ } from "lucide-react";
+import { Send } from "lucide-react";
 import { AnswerDto, chatApi, MessageDto } from "@/services/api/chatApi";
 import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWebSocket } from "@/services/websocket";
@@ -27,7 +25,6 @@ export interface ChatWindowProps {
 export function ChatWindow(props: ChatWindowProps) {
   const { ws, isTyping, setIsTyping } = props;
   const [input, setInput] = useState("");
-  //const [isTyping, setIsTyping] = useState(typing);
   const sendMessage = useChatStore((state) => state.sendMessage);
   const chats = useChatStore((state) => state.chats);
   const flow = useChatStore((state) => state.flow);
@@ -91,7 +88,7 @@ export function ChatWindow(props: ChatWindowProps) {
               ? <div className="whitespace-pre-wrap">{message.text}</div>
               : <div className="prose prose-blue max-w-none"
               style={{
-                '--tw-prose-bullets': '#00000', // Tailwind blue-800
+                '--tw-prose-bullets': '#00000',
               } as React.CSSProperties}
               >
                       <style>
@@ -109,30 +106,6 @@ export function ChatWindow(props: ChatWindowProps) {
             </div>
             {message.sender === "ragnarok" && (
               <div className="mt-1 flex justify-start space-x-2">
-                {/* <Button
-                  className=" hover:bg-background"
-                  variant="ghost"
-                  size="icon"
-                  title="Kladné hodnocení"
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  className=" hover:bg-background"
-                  variant="ghost"
-                  size="icon"
-                  title="Záporné hodnocení"
-                >
-                  <ThumbsDown className="h-4 w-4" />
-                </Button>
-                <Button
-                  className=" hover:bg-background"
-                  variant="ghost"
-                  size="icon"
-                  title="Znovu vygenerovat odpověď"
-                >
-                  <ListRestart className="h-4 w-4" />
-                </Button> */}
                 <UsedFlow text= {(JSON.parse(message.text) as AnswerDto).flow}/>
                 <CiteMessage text= {(JSON.parse(message.text) as AnswerDto).paragraphs} />
               </div>

@@ -25,7 +25,7 @@ public class FlowService {
     private VectorDBService vectorDBService;
 
     @Autowired
-    private Test test;
+    private SearchService searchService;
 
     @Autowired
     private InMemoryChatMemory chatMemory;
@@ -172,7 +172,6 @@ public class FlowService {
     public AnswerDto paraphraseFlow(MessageDto messageDto, Integer counter) {
         if(counter >= 3) {
             return classicFlow(messageDto);
-            //return AnswerDto.builder().answer("Omlouvám se, ale na Vámi zadanou otázku se nepodařilo najít paragrafy zabývající se touto tématikou.").build();
         }
         if (!questionValidation(messageDto)) {
             return AnswerDto.builder().answer("Omlouvám se, ale tato otázka nespadá do právního rámce, na který je systém RAGNAROK zaměřen. Pokud máte dotaz z oblasti práva, rád vám pomohu.").paragraphs("").build();
@@ -188,13 +187,9 @@ public class FlowService {
                     "dotaz: " + messageDto.getQuestion() + "\n");
             ++whileCounter;
         }while(!paraphraseValidation(messageDto.getQuestion(), paraphrase));
-        /*keywords = ollamaUniqueQuestion("Přiloženou otázku uprav tak, aby byla více jako právnická řeč a obsahovala slova, která by se mohla vyskytovat v právnickém textu, jako jsou zákoníky atd... Ale hlavně zachovej význam otázky. Vrať mi jen a pouze tuto upravenou otázku." + "\n" +
-                "dotaz: " + messageDto.getQuestion() + "\n");*/
-
-        //docs = vectorDBService.search(keywords, messageDto.getNumberOfParagraphs());
 
         try {
-            docs = test.search(messageDto.getQuestion(), paraphrase, messageDto.getNumberOfParagraphs());
+            docs = searchService.search(messageDto.getQuestion(), paraphrase, messageDto.getNumberOfParagraphs());
         }
         catch (Exception e) {
             return AnswerDto.builder().answer("Omlouváme se. Nastala nečekaná chyba. zkuste váš dotaz znovu").build();
@@ -231,11 +226,6 @@ public class FlowService {
         return buildAnswer(answer, paragraphs, FlowType.PARAPHRASE);
     }
 
-    private String getDocumentsString(String query, Integer numberOfParagraph) {
-        List<Document> docs = vectorDBService.search(query, numberOfParagraph);
-        return getDocumentsString(docs);
-    }
-
     private String getDocumentsString(List<Document> docs) {
         List<String> contents = docs
                 .stream()
@@ -246,13 +236,6 @@ public class FlowService {
         return String.join("\n",
                 contents
         );
-    }
-
-    private String buildRAGPrompt(String question, String documents) {
-        return "Odpověz uživateli na tuto otázku: \n" +
-                question + "\n" +
-                "Ale Odpověď můžeš čerpat jen z těchto informací: \n" +
-                documents;
     }
 
     private String buildRAGPrompt(String question, String documents, String paragraphs) {
@@ -279,18 +262,6 @@ public class FlowService {
                 .content();
     }
 
-    private String ollamaContextQuestion(String question, String chatId) {
-
-        return chatClient.prompt()
-                .advisors(
-                        a -> a
-                                .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                )
-                .user(question)
-                .call()
-                .content();
-    }
-
     private String ollamaContextQuestion(String question, String chatId, String paragraphs) {
 
         return chatClient.prompt()
@@ -302,21 +273,6 @@ public class FlowService {
                 .user(question)
                 .call()
                 .content();
-    }
-
-
-    private AnswerDto buildAnswer(String answer, List<Document> docs, FlowType flowType) {
-        return AnswerDto.builder()
-                .answer(answer)
-                .paragraphs(
-                        docs.stream().map(
-                                document -> document.getMetadata().get("paragraph").toString()
-                        )
-                        .distinct()
-                        .collect(Collectors.joining(", "))
-                )
-                .flow(flowType)
-                .build();
     }
 
     private AnswerDto buildAnswer(String answer, String docs, FlowType flowType) {

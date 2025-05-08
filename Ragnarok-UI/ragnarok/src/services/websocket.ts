@@ -9,8 +9,6 @@ export class ChatWebSocket {
   private isSocketOpen = false;
 
   private constructor() {
-    console.log("CHAT-WEBSOCKET");
-
     this.socket = new WebSocket(`ws://${process.env.NEXT_PUBLIC_RAGNAROK_UI_URL}/ws/chat`);
 
     this.socket.onopen = () => {
