@@ -11,17 +11,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.Sorts;
-import com.mongodb.client.result.InsertOneResult;
 import com.mongoiswriter.Configuration.MongoConfig;
 import com.mongoiswriter.Enum.ExtracterType;
 import java.io.BufferedInputStream;
@@ -30,15 +24,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import org.bson.Document;
@@ -58,31 +48,28 @@ public class JsonExtracterUtil {
        public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
        private final MongoDatabase database;
        private final MongoUtils mongoUtils;
-       private final StringParser stringParser; 
        private final ObjectMapper objectMapper;
        private final MongoConfig mongoConfig;
        
        private Set<Integer> uniqueIds;
               
-       public JsonExtracterUtil(MongoDatabase database,MongoUtils mongoUtils,StringParser stringParser,ObjectMapper objectMapper, MongoConfig mongoConfig){
+       public JsonExtracterUtil(MongoDatabase database,MongoUtils mongoUtils, ObjectMapper objectMapper, MongoConfig mongoConfig){
            this.database = database;
            this.mongoUtils = mongoUtils;
-           this.stringParser = stringParser;
            this.objectMapper = objectMapper;
            this.mongoConfig = mongoConfig;
        }
 
     public void extractFromAddressToMongo(String sourceURL, String collectionName, ExtracterType extracterType)
-            throws MalformedURLException, SocketException, IOException {
-        JsonFactory jsonFactory = new JsonFactory();
-        mongoUtils.createCollection(collectionName);
-        MongoCollection<Document> collection = database.getCollection(collectionName);
+        throws MalformedURLException, SocketException, IOException {
+            JsonFactory jsonFactory = new JsonFactory();
+            mongoUtils.createCollection(collectionName);
+            MongoCollection<Document> collection = database.getCollection(collectionName);
 
-        // Set write concern to something less strict if acceptable
-        collection = collection.withWriteConcern(WriteConcern.ACKNOWLEDGED);
+            collection = collection.withWriteConcern(WriteConcern.ACKNOWLEDGED);
 
-        uniqueIds = mongoUtils.getListOfUniqueZnenDokumentIDsForCollection(
-            mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL)
+            uniqueIds = mongoUtils.getListOfUniqueZnenDokumentIDsForCollection(
+                mongoUtils.getMongoCollection(mongoConfig.MONGO_COLLECTION_AKTY_FINAL)
         );
 
         URL url = new URL(sourceURL);
@@ -107,11 +94,8 @@ public class JsonExtracterUtil {
             } else {
                 throw new IOException("Expected data to start with an Object");
             }
-
-            if (extracterType == ExtracterType.PRAVNI_AKT_VAZBA) {
-                collection.createIndex(Indexes.ascending("znění-cíl-dokument-id"));
-                collection.createIndex(Indexes.ascending("znění-fragment-zdroj.znění-dokument-id"));
-            } else if (extracterType == ExtracterType.PRAVNI_AKT) {
+            
+             if (extracterType == ExtracterType.PRAVNI_AKT) {
                 collection.createIndex(Indexes.ascending("znění-dokument-id"));
             }
 
@@ -132,7 +116,7 @@ public class JsonExtracterUtil {
     private void processRootObject(JsonParser jsonParser, MongoCollection<Document> collection, ExtracterType extracterType) throws IOException {
         while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = jsonParser.getCurrentName();
-            jsonParser.nextToken(); // Move to the value
+            jsonParser.nextToken();
 
             if ("položky".equals(fieldName) && jsonParser.currentToken() == JsonToken.START_ARRAY) {
                 processItemsArray(jsonParser, collection, extracterType);
@@ -149,7 +133,7 @@ public class JsonExtracterUtil {
 
         while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
             if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-                Document doc = parseSingleDocument(jsonParser, objectMapper, extracterType, uniqueIds);
+                Document doc = parseSingleDocument(jsonParser, objectMapper, extracterType);
                 if (doc != null) {
                     batch.add(doc);
                 }
@@ -177,19 +161,12 @@ public class JsonExtracterUtil {
     
     
 
-    private Document parseSingleDocument(JsonParser jsonParser, ObjectMapper objectMapper, ExtracterType extracterType, Set<Integer> uniqueIds) throws IOException {
+    private Document parseSingleDocument(JsonParser jsonParser, ObjectMapper objectMapper, ExtracterType extracterType) throws IOException {
        JsonNode jsonNode = objectMapper.readTree(jsonParser);
        
        String jsonString = objectMapper.writeValueAsString(jsonNode);
        Document document = Document.parse(jsonString);
        
-
-       if (extracterType == ExtracterType.TERMIN_NAZEV) {
-       }
-
-       if (extracterType == ExtracterType.TERMIN_VAZBA) {
-       }
-
        if (extracterType == ExtracterType.PRAVNI_AKT) {
            JsonNode zneniDatumUcinostiDoNode = jsonNode.get("znění-datum-účinnosti-do");
            JsonNode zneniDatumUcinostiOdNode = jsonNode.get("znění-datum-účinnosti-od");
@@ -222,47 +199,9 @@ public class JsonExtracterUtil {
            
            
             document.append("status", "PLATNY");
-            
-            
-       } else if (extracterType == ExtracterType.TERMIN_DEFINICE) {
-
-           LocalDate currentDate = LocalDate.now();
-           JsonNode terminPlatnostDoNode = jsonNode.get("definice-termínu-platnost-vazby-do");
-
-       }
-
-       if (extracterType == ExtracterType.PRAVNI_AKT_VAZBA) {
-           JsonNode zneniCilDokumentID = jsonNode.get("znění-cíl-dokument-id");
-           JsonNode firstFragment = jsonNode.path("znění-fragment-cíl").path(0);
-           JsonNode firstZneniDokumentID = firstFragment.path("znění-dokument-id");
-           
-           
-           if (zneniCilDokumentID.asInt() == firstZneniDokumentID.asInt()) {
-               return null;
-           }
- 
-           if (!uniqueIds.contains(zneniCilDokumentID.asInt()) || !uniqueIds.contains(firstZneniDokumentID.asInt())) {
-               // Skip
-               return null;
-           }
-       }
-
-       if (extracterType == ExtracterType.TERMIN_VAZBA) {
-           Document vazba = new Document();
-           int terminID;
-           int terminDefiniceID;
-           try {
-               terminID = stringParser.extractIdAfterLastSlashAsInt(getValueFromField(document, "cvs-termín", "iri"));
-               terminDefiniceID = stringParser.extractIdAfterLastSlashAsInt(getValueFromField(document, "cvs-definice-termínu", "iri"));
-           } catch (Exception ex) {
-               return null; // Skip if we can’t extract IDs
-           }
-           vazba.append("termín-id", terminID);
-           vazba.append("definice-termínu-id", terminDefiniceID);
-           return vazba;
-       }
-
-       return document; // Return the prepared document
+                   
+       } 
+       return document; 
    }
        
        

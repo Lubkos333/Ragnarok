@@ -5,7 +5,6 @@
  */
 package com.mongoiswriter.Service;
 
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -19,14 +18,6 @@ import org.springframework.stereotype.Service;
 @EnableAsync
 public class StringParser {
 
-    /**
-     * Extracts the integer ID from the end of a string formatted as "something/id".
-     *
-     * @param input The input string containing the ID after the last slash.
-     * @return The extracted ID as an integer.
-     * @throws IllegalArgumentException If the input string does not contain a slash.
-     * @throws NumberFormatException    If the substring after the last slash is not a valid integer.
-     */
     public int extractIdAfterLastSlashAsInt(String input) throws IllegalArgumentException {
         if (input == null || input.isEmpty()) {
             throw new IllegalArgumentException("Input string cannot be null or empty.");
@@ -57,18 +48,16 @@ public class StringParser {
     
     public String extractFormattedText(String input) {
          if (input == null || input.isEmpty()) {
-            return null;  // Return null if the input is empty or null
+            return null; 
         }
-
-        // Regular expression to capture the text between `>` and `</div>`
+         
         Pattern pattern = Pattern.compile(">([^<]+)</div>");
         Matcher matcher = pattern.matcher(input);
 
         if (matcher.find()) {
-            return matcher.group(1).trim();  // Return the extracted text, trimmed of any surrounding spaces
+            return matcher.group(1).trim();
         }
 
-        // Return null if no match is found
         return null;
     }
     
