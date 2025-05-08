@@ -37,11 +37,9 @@ import org.springframework.stereotype.Service;
 @EnableAsync
 public class MongoUtils {
      private static final Logger logger = LoggerFactory.getLogger(MongoUtils.class);
+     private final String PARAM_DESIGNATION_VALUE = "akt-plné-označení";
      private final MongoDatabase database;
      private final MongoConfig config;
-
-     
-     private boolean isProcessing = false;
 
      private final IdFetcherService idFetcher;
      @Autowired
@@ -52,14 +50,6 @@ public class MongoUtils {
          this.config = config;
         
      }
-     
-    public boolean isProcessing() {
-        return isProcessing;
-    }
-
-    public void setProcessing(boolean isProcessing) {
-        this.isProcessing = isProcessing;
-    }
      
      
       public  boolean createCollection(String collectionName) {
@@ -126,9 +116,9 @@ public class MongoUtils {
         return objectMapper.readTree(appendLinks(appendRelations(doc)).toJson());
     }
     
-    public JsonNode getRelatedDocuments(Integer id)  throws JsonProcessingException, DocumentNotFoundException {
+    public JsonNode getRelatedDocuments(String designation)  throws JsonProcessingException, DocumentNotFoundException {
         Document baseDoc = getMongoCollection(config.MONGO_COLLECTION_AKTY_ZNENI)
-            .find(Filters.eq("znění-dokument-id", id))
+            .find(Filters.eq(PARAM_DESIGNATION_VALUE, designation))
             .first();
 
         if (baseDoc == null) {
@@ -233,7 +223,7 @@ public class MongoUtils {
         if (doc == null) {
             throw new DocumentNotFoundException("Document not found");
         }
-        Integer zneniDokumentId = doc.getInteger("znění-dokument-id");
+        String zneniDokumentId = doc.getString("akt-plné-označení");
         if (zneniDokumentId == null) {
             return doc;
         }
@@ -278,12 +268,6 @@ public class MongoUtils {
          }
          return arrayNode;
     }
-    
-    /*
-    public JsonNode getOneByID(String collectionName,int id){
-        
-    }
-    */
     
     
      public JsonNode getMetadataByLink(String link) throws DocumentNotFoundException, JsonProcessingException {

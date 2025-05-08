@@ -6,7 +6,6 @@
 package com.documentapi.Controller;
 
 import com.documentapi.Exception.DocumentNotFoundException;
-import com.documentapi.Service.CompleteChunkingService;
 import com.documentapi.Service.MongoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,7 +46,7 @@ public class DataController {
     }
       
     @Operation(
-        summary = "Get a related documents designations for given document ID",
+        summary = "Get a related documents designations for designation",
         description = "Fetches a all documents designations from the MongoDB collection by ID of document for which relations are set. Requires a valid authorization token."
     )
         @ApiResponses(value = {
@@ -94,18 +93,15 @@ public class DataController {
     public ResponseEntity<JsonNode> getRelated(
         @Parameter(description = "Authorization token", example = "testApiKey")
         @RequestHeader("Authorization")  String token, 
-        @Parameter(description = "ID of the document to get relations for", example = "389695")    
-        @RequestParam("id") String id) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
+        @Parameter(description = "Designation of the document to get relations for", example = "89/2012 Sb.")    
+        @RequestParam("designation") String designation) {
             if(helperService.isTokenValid(token)){
                 try {
-                    JsonNode doc = mongoUtils.getRelatedDocuments(Integer.valueOf(id));
+                    JsonNode doc = mongoUtils.getRelatedDocuments(designation);
                      return new ResponseEntity<>(doc, HttpStatus.OK);
                 } catch (JsonProcessingException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
                 } catch (DocumentNotFoundException ex) {
                     Logger.getLogger(DataController.class.getName()).log(Level.SEVERE, null, ex);
                     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -175,9 +171,6 @@ public class DataController {
         @RequestHeader("Authorization") String token,
         @Parameter(description = "ID of the document to fetch", example = "389695") 
         @RequestParam("id") String id) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
             if(helperService.isTokenValid(token)){
                 try {
                     JsonNode doc = mongoUtils.getDocumentByID(Integer.valueOf(id));
@@ -255,9 +248,6 @@ public class DataController {
         @RequestHeader("Authorization") String token,
         @Parameter(description = "Designation of the document to fetch", example = "89/2012 Sb.") 
         @RequestParam("designation") String designation) {
-            if(mongoUtils.isProcessing()){
-               return new ResponseEntity<>(HttpStatus.PROCESSING); 
-            }
             if(helperService.isTokenValid(token)){
                 try {
                     JsonNode doc = mongoUtils.getDocumentByDesignation(designation);
