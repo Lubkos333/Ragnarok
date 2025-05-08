@@ -105,7 +105,7 @@ public class TestQuestionsService {
                                 "\n" +
                                 "Zohledňuje se i věk rodiče, jeho zdravotní stav, vzdělání, pracovní zkušenosti, sociální situovanost, také nepříznivá situace na trhu práce, nezaměstnanost v daném oboru nebo regionu apod. Přihlíží se rovněž k potenciálním příjmům, tedy zda povinný rodič pouze účelově nevyužívá svého potenciálu, který by mu umožnil lepší uplatnění na trhu práce a tím i možnost zajistit dítěti vyšší výživné a životní úroveň. Jako pomůcku používají soudy i tzv. „ministerskou tabulku“.")
                         .build()
-                ,
+                /*,
                 TestDto.builder()
                         .question("Co je tzv. smluvený rozvod?")
                         .expectedAnswer("Jak již název napovídá, smluvený rozvod (jinak také dohodnutý či nesporný) je vhodným institutem pro všechny manžele, kteří se na ukončení manželství dohodli a chtějí mít rozvodové řízení za sebou co nejrychleji. Tento typ rozvodu je možný pouze v případě, že manželství trvalo déle než rok a manželé spolu alespoň šest měsíců nežijí. Oba musí s rozvodem souhlasit a podat za tímto účelem společný návrh na rozvod. Případně může tento návrh podat pouze jeden z manželů a ten druhý se k němu připojí. Pokud mají manželé nezletilé děti, musí v řízení o výkon rodičovské odpovědnosti soud schválit jejich dohodu. Dále musí manželé pomocí dohody urovnat svoje majetkové poměry po rozvodu.\n" +
@@ -135,7 +135,7 @@ public class TestQuestionsService {
                         .expectedAnswer("Soud může změnit dohodu rodičů o výši výživného nebo předchozí rozhodnutí o výživném pro nezletilé dítě, pokud došlo k podstatné změně poměrů. Změna poměrů musí nastat ve skutečnostech, které byly podstatné pro předchozí rozhodnutí soudu v dané věci. V případě výživného na nezletilé dítě se tak předpokládá, že nastala nějaká závažná změna, která odůvodňuje zvýšení výživného.\n" +
                                 "\n" +
                                 "Podstatnou změnou v životě nezletilého dítěte, která by odůvodnila zvýšení jeho životních nákladů, a tedy i tomu odpovídajícího výživného, může být například přestup dítěte na vyšší stupeň vzdělávání, zvýšené náklady na dopravu do školy nebo zdravotní stav vyžadující léčebné procedury či medikaci. Stejně tak mohou změny nastat na straně povinného rodiče. Může se jednat o získání nového zaměstnání, přeřazení na lepší pracovní místo, a tedy i zvýšení platu nebo mzdy. Soud zváží, zda majetkové poměry povinného umožňují zvýšení výživného a zda na straně dítěte existuje důvodná potřeba k jeho vyplácení.")
-                        .build()
+                        .build()*/
         );
     }
 

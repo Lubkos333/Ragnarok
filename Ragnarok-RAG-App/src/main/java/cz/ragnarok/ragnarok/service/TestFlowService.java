@@ -1,6 +1,5 @@
 package cz.ragnarok.ragnarok.service;
 
-import cz.ragnarok.ragnarok.rest.dto.AnswerDto;
 import cz.ragnarok.ragnarok.rest.dto.DocumentsResponseDto;
 import cz.ragnarok.ragnarok.rest.dto.TestDto;
 import cz.ragnarok.ragnarok.rest.enums.FlowType;
@@ -20,6 +19,9 @@ public class TestFlowService {
 
     @Autowired
     private VectorDBService vectorDBService;
+
+    @Autowired
+    private SearchService searchService;
 
 
     public TestDto classicFlow(TestDto testDto) {
@@ -86,7 +88,12 @@ public class TestFlowService {
         paraphrase = ollamaUniqueQuestion("Přiloženou otázku uprav tak, aby byla více jako právnická řeč a obsahovala slova, která by se mohla vyskytovat v právnickém textu, jako jsou zákoníky atd... Ale hlavně zachovej význam otázky. Vrať mi jen a pouze tuto upravenou otázku." + "\n" +
                 "dotaz: " + testDto.getQuestion() + "\n");
 
-        docs = vectorDBService.search(paraphrase, 20);
+
+        try {
+            docs = searchService.search(paraphrase, testDto.getQuestion(), 20);
+        } catch (Exception e) {
+            docs = vectorDBService.search(paraphrase, 20);
+        }
 
         String documents = getDocumentsString(docs);
 
