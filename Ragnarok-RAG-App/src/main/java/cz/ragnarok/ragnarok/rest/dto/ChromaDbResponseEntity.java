@@ -1,12 +1,12 @@
 package cz.ragnarok.ragnarok.rest.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,12 +14,19 @@ import java.util.List;
 @Data
 @Builder
 public class ChromaDbResponseEntity {
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> ids;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<List<Float>> embeddings;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> documents;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> uris;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> data;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<Metadata> metadatas;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> included;
 
     @AllArgsConstructor
