@@ -122,12 +122,22 @@ public class DataService {
     }
 
     public void saveShortenChunksByDesignation(String designation, LocalDate newDate) {
-        List<ChunkDto> chunks = getParagraphsByDesignation(designation).block();
+        //List<ChunkDto> chunks = getParagraphsByDesignation(designation).block();
+        List<ChunkDto> chunks = getParagraphsOnlyByDesignation(designation).block();
         chunks = chunks.stream().toList();
         int chunksSize = chunks.size();
         int chunkSize = 10;
         for (int i = 0; i < chunksSize; i += chunkSize) {
             upload(chunks.subList(i, Math.min(i + chunkSize, chunksSize)), designation, newDate);
+        }
+    }
+
+    public String deleteByDesignation(String designation) {
+        try {
+            vectorDBService.deleteByDesignation(designation);
+            return "OK";
+        } catch (Exception e) {
+            return e.getMessage();
         }
     }
 
