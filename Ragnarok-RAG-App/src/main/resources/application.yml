@@ -4,26 +4,26 @@ server:
   port: ${port}
 
 vector-db:
-  address: http://is-vector-db.dyn.cloud.e-infra.cz
-  collection-id: e14385e1-c1a7-4e8e-9eaa-ac013d1d0884
-  collection-name: SpringAiCollection
+  address: 
+  collection-id: 
+  collection-name: 
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: 
 
 spring:
   ai:
     openai:
-      api-key: sk-962b293a5578425784b8c4bd4ab79d09
-      base-url: https://chat.ai.e-infra.cz/
+      api-key: 
+      base-url: 
       embedding:
-        base-url: https://vllm.ai.e-infra.cz
+        base-url: 
         options:
-          model: multilingual-e5-large-instruct
+          model: 
       chat:
-        completions-path: /api/chat/completions
+        completions-path: 
         options:
-          model: llama3.3:latest
+          model: 
           httpHeaders:
-            Authorization: Bearer sk-962b293a5578425784b8c4bd4ab79d09
+            Authorization: 
