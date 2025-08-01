@@ -2,6 +2,10 @@
 
 **Ragnarok** je systém využívající metody Retrieval-Augmented Generation (RAG) pro právní poradenství.
 
+Testovací verze systému je deploynuta v rámci infrastruktury Metacentra a je dostupná skrze UI na následující adrese: [http://ragnarok-ui.dyn.cloud.e-infra.cz/](http://ragnarok-ui.dyn.cloud.e-infra.cz/)
+
+
+
 ## Složky projektu
 - **Ragnarok-UI**: Testovací frontendová aplikace.
 - **Ragnarok-RAG-App**: Spring boot backendová aplikace zajišťující AI dotazy, práci s vektorovou databází a vystavuje API systému.
