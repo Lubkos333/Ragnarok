@@ -1,0 +1,32 @@
+port: 7777
+
+server:
+  port: ${port}
+
+vector-db:
+  address:
+  collection-id:
+  collection-name:
+
+springdoc:
+  api-docs:
+    path:
+
+data-app:
+  api-key:
+
+spring:
+  ai:
+    openai:
+      api-key:
+      base-url:
+      embedding:
+        base-url:
+        options:
+          model:
+      chat:
+        completions-path:
+        options:
+          model:
+          httpHeaders:
+            Authorization:
