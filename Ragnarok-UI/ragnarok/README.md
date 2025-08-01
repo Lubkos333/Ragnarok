@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ragnarok-UI
 
-## Getting Started
+Front-end aplikace využívající Ragnarok-BE API.
 
-First, run the development server:
+## Spuštění
+
+V první řadě je nutné spustit development server:
 
 ```bash
 npm run dev
-# or
+# nebo
 yarn dev
-# or
+# nebo
 pnpm dev
-# or
+# nebo
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Poté bude dostupný na této adrese: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Nejjednoduší způsob je skrze Vercel: [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
 
-## Learn More
+Pro lokální spuštění lze využít přiložený Dockerfile
 
-To learn more about Next.js, take a look at the following resources:
+```docker build . -t Ragnarok-UI```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```docker run Ragnarok-UI```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Proměnné prostředí
 
-## Deploy on Vercel
+V kořenovém adresáři je nutné vytvořit env. soubor, do které se vloží následujcí proměnné:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+``` [Typescript]
+# Production: 
+# NEXT_PUBLIC_RAGNAROK_UI_URL="ragnarok-ui.dyn.cloud.e-infra.cz" - adresa na které je vystavené UI
+# NEXT_PUBLIC_RAGNAROK_APP_URL="http://ragnarok-be.dyn.cloud.e-infra.cz" - adresa API poskytovaného backend serverem
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# COMPLETELY LOCAL:
+# NEXT_PUBLIC_RAGNAROK_UI_URL="localhost:3000" - adresa na které je vystavené UI
+# NEXT_PUBLIC_RAGNAROK_APP_URL="http://localhost:7777" - adresa API poskytovaného backend serverem
+
+# REMOTE BACKEND: 
+NEXT_PUBLIC_RAGNAROK_UI_URL="localhost:3000" - adresa na které je vystavené UI
+NEXT_PUBLIC_RAGNAROK_APP_URL="http://ragnarok-be.dyn.cloud.e-infra.cz" - adresa API poskytovaného backend serverem
+```
+
+
