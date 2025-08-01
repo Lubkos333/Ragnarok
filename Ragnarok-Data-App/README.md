@@ -77,6 +77,7 @@ Docker image služby lze spustit s následující sadou proměnných
    MOGNO_COLLECTION_AKTY_ZNENI - Zdrojová kolekce obsahující původní datovou sadu. Využívá se pro hledání relevancí mezi právními akty. Defaultně PravniAktZneni  
    MONGO_USER -jméno k přístupu do dokumentové databáze Defaultně root
    MONGO_PASSWORD - heslo k přístupu do dokumentové databáze. Defaultně root
+   API_KEY - API klíč, jež se využívá pro komunikaci s API 
 ```
 
 Pro běh není nutné vytvářet ručně jednotlivé kolekce. Komponenta Data writeru si při spuštění vytvoří databázi definovanou v properties a stejně tak i jednotlivé kolekce.
