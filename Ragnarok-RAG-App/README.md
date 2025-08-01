@@ -39,6 +39,10 @@ Konfigurace služby je řízena prostřednictvím souboru `application.yml`, kde
 | `address`                    | URL adresa instance vektorové databáze (např. ChromaDB) |
 | `collection-id`              | Jedinečný identifikátor kolekce (namespace) |
 | `collection-name`            | Čitelné pojmenování kolekce pro správu a orientaci |
+| `data-app.api-key`          | Autentizační klíč pro přístup k aplikaci zpracovávající data                         |
+| `vector-db.address:`        | Adresa vektorové databáze, kde jsou zpracovaná data ve vektorové podobě              |
+| `vector-db.collection-id`   | ID konkrétní kolekce                                                                 |
+| `vector-db.collection-name` | Název konkrétní kolekce                                                              |
 
 ## Použité technologie
 
