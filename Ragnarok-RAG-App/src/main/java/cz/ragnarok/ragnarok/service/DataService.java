@@ -7,6 +7,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,13 +25,16 @@ public class DataService {
     @Qualifier("dataClient")
     private WebClient dataClient;
 
+    @Value("${data-app.api-key}")
+    private String apiKey;
+
     @Autowired
     private VectorDBService vectorDBService;
 
     public Mono<List<ChunkDto>> getParagraphsOnlyByDesignation(String designation) {
         return dataClient.get()
                 .uri("/api/processing/getParagraphsOnlyByDesignation?designation="+ designation)
-                .header("Authorization", "Bearer testApiKey")
+                .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<ChunkDto>>() {})
                 .timeout(Duration.ofMinutes(5));
@@ -39,7 +43,7 @@ public class DataService {
     public Mono<DataByDesignationDto> getDataByDesignation(String designation) {
         return dataClient.get()
                 .uri("/api/data/getByDesignation?designation="+ designation)
-                .header("Authorization", "Bearer testApiKey")
+                .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<DataByDesignationDto>() {})
                 .timeout(Duration.ofMinutes(5));
