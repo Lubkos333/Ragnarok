@@ -4,26 +4,29 @@ server:
   port: ${port}
 
 vector-db:
-  address: 
-  collection-id: 
-  collection-name: 
+  address:
+  collection-id:
+  collection-name:
 
 springdoc:
   api-docs:
-    path: 
+    path:
+
+data-app:
+  api-key:
 
 spring:
   ai:
     openai:
-      api-key: 
-      base-url: 
+      api-key:
+      base-url:
       embedding:
-        base-url: 
+        base-url:
         options:
-          model: 
+          model:
       chat:
-        completions-path: 
+        completions-path:
         options:
-          model: 
+          model:
           httpHeaders:
-            Authorization: 
+            Authorization:
