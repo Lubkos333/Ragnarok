@@ -16,22 +16,16 @@ java -jar target/OpenDataParser-1.0.jar
 ```
 Docker image služby je možné spustit s následující sadou proměnných 
 
+```
    MONGO_ADDRESS - Adresa pro dokumentovou databázi. Defaultně mongodb://localhost:27017
-   
    MOGNO_DATABASE_NAME - Jméno databáze. Defaultně DataDB
-   
    MOGNO_COLLECTION_AKTY_ZNENI - Cílová kolekce, do které se nahraje datová sada. Využívá se pro následnou práci nad staženou datovou sadou. Defaultně PravniAktZneni  
-   
    MOGNO_COLLECTION_AKTY_FINAL - Cílová kolekce, do které se zanesou pouze aktuální konsolidované verze metadat jednotlivých právních aktů. Defaultně PravniAktZneniOdkazyQuick
-   
    MONGO_USER - Jméno k přístupu do dokumentové databáze. Defaultně root
-   
    MONGO_PASSWORD - Heslo k přístupu do dokumentové databáze. Defaultně root
-   
    SBIRKA_URL_AKTY_ZNENI - Zdroj pro stažení metadat právních aktů. Defaultně https://opendata.eselpoint.cz/datove-sady-esbirka/001PravniAktZneni.json.gz
-   
    THREAD_NUMBER - Maximální počet vláken, jež se využije při stažení a filtraci jednotlivých aktů. Defaultně 50
-
+```
 
 Aplikaci lze poté kromě přímého spuštění skrze .jar spustit následovně skrze přiložený Dockerfile: 
 
@@ -67,25 +61,23 @@ docker run -d -p 9090:9090 -e MONGO_ADDRESS="…" -e MONGO_DATABASE_NAME="…" -
 Jednotlivé env. proměnné nejsou povinné, v případě jejích neuvedení se použijí defaultní hodnoty.
 Služba pak běží na http://localhost:9090 a její dokumentace k REST API je dostupná na http://localhost:9090/swagger-ui/index.html.
 
+
 Docker image služby lze spustit s následující sadou proměnných
 
-MONGO_ADDRESS - adresa pro dokumentovou databázi. Defaultně mongodb://localhost:27017
+```
+   MONGO_ADDRESS - adresa pro dokumentovou databázi. Defaultně mongodb://localhost:27017
+   MOGNO_DATABASE_NAME jméno databáze. Defaultně DataDB
+   MOGNO_COLLECTION_AKTY_FINAL - Zdrojová kolekce obsahující vyfiltrovaná znění. Defaultně PravniAktZneniOdkazyQuick
+   MOGNO_COLLECTION_AKTY_ZNENI - Zdrojová kolekce obsahující původní datovou sadu. Využívá se pro hledání relevancí mezi právními akty. Defaultně PravniAktZneni  
+   MONGO_USER -jméno k přístupu do dokumentové databáze Defaultně root
+   MONGO_PASSWORD - heslo k přístupu do dokumentové databáze. Defaultně root
+```
 
-MOGNO_DATABASE_NAME jméno databáze. Defaultně DataDB
-
-MOGNO_COLLECTION_AKTY_FINAL - Zdrojová kolekce obsahující vyfiltrovaná znění. Defaultně PravniAktZneniOdkazyQuick
-
-MOGNO_COLLECTION_AKTY_ZNENI - Zdrojová kolekce obsahující původní datovou sadu. Využívá se pro hledání relevancí mezi právními akty. Defaultně PravniAktZneni  
-
-MONGO_USER -jméno k přístupu do dokumentové databáze Defaultně root
-
-MONGO_PASSWORD - heslo k přístupu do dokumentové databáze. Defaultně root
-
-Pro běh není nutné vytvářet ručně databáze, ani kolekce. Komponenta Data writeru si při spuštění vytvoří databázi definovanou v properties a stejně tak i jednotlivé kolekce.
+Pro běh není nutné vytvářet ručně jednotlivé kolekce. Komponenta Data writeru si při spuštění vytvoří databázi definovanou v properties a stejně tak i jednotlivé kolekce.
 
 ## MongoDB
 
-Pro vytvoření databázové  image a jejího spuštění  v lokálním prostředí stačí zadat následující příkazy : 
+Pro vytvoření databázové image a jejího spuštění  v lokálním prostředí stačí zadat následující příkazy : 
 
 ```docker pull -t mongo:6.0```
 
