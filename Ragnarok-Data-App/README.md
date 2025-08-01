@@ -1,12 +1,18 @@
 # Ragnarok-Data-App
 
-Backendová část aplikace Ragnarok, postavená na Spring Boot určena pro zpracování právních aktů.
+Backendová část aplikace Ragnarok, postavená na Spring Boot. 
+
+**Data writer** komponenta je určena pro natažení metadat právních aktů z portálu e-Sbirka, jejich převedení do jednotné podoby a uložení do dokumentové databáze. Je doporučené spouštět tuto komponentu periodicky.
+
+**Data reader** komponenta vystavuje své API, skrze které na základě metadat uložených v dokumentové databázi poskytuje strojově zpracovatelný obsah jednotlivých právních aktů ve formátu JSON.
 
 ## Data writer
 Pro spuštění je nutné vybuildit přiložený dockerfile. Kromě běhu v OCI image lze aplikaci zkompilovat do spustitelného .jar souboru. Minimální požadovaná verze JDK je 17.
 Spustit:
 
-```mvn clean install```
+```
+mvn clean install
+```
 
 v adresáří obsahujícím soubor src
 
@@ -30,14 +36,12 @@ Docker image služby je možné spustit s následující sadou proměnných
 Aplikaci lze poté kromě přímého spuštění skrze .jar spustit následovně skrze přiložený Dockerfile: 
 
 ```
-docker build -t data-writer:latest
-```
-```
+docker build -t data-writer:latest .
 docker run -d -e MONGO_ADDRESS="…" -e MONGO_DATABASE_NAME="…" -e MONGO_COLLECTION_AKTY_ZNENI="…" -e MONGO_COLLECTION_AKTY_FINAL="…" -e MONGO_USER="…" -e MONGO_PASSWORD="…" -e SBIRKA_URL_AKTY_ZNENI="…" -e THREAD_NUMBER="…" --name data-writer data-writer:latest
 ```
 
 Jednotlivé env. proměnné nejsou povinné, v případě jejích neuvedení se použijí defaultní hodnoty.
-Služba pak běží na pozadí dokud nedokončí zpracování právních aktů
+Služba poté běží na pozadí dokud nedokončí zpracování právních aktů.
 
 ## Data reader
 
@@ -51,7 +55,9 @@ ve adresáři obsahujícím soubor src
 
 Ve stejném adresáři spustit:
 
-```java -jar target/DocumentApi-1.0.jar```
+```
+java -jar target/DocumentApi-1.0.jar
+```
 
 Aplikaci lze poté kromě přímého spuštění skrze .jar deploynout následovně pomocí přiloženého Dockerfile:
 ```
@@ -59,7 +65,7 @@ docker build -t data-reader:latest .
 docker run -d -p 9090:9090 -e MONGO_ADDRESS="…" -e MONGO_DATABASE_NAME="…" -e MONGO_COLLECTION_AKTY_FINAL="…" -e MONGO_COLLECTION_AKTY_ZNENI="…" -e MONGO_USER="…" -e MONGO_PASSWORD="…" --name data-reader data-reader:latest
 ```
 Jednotlivé env. proměnné nejsou povinné, v případě jejích neuvedení se použijí defaultní hodnoty.
-Služba pak běží na http://localhost:9090 a její dokumentace k REST API je dostupná na http://localhost:9090/swagger-ui/index.html.
+Služba pak běží na [http://localhost:9090](http://localhost:9090) a její dokumentace k REST API je dostupná na [http://localhost:9090/swagger-ui/index.html](http://localhost:9090/swagger-ui/index.html).
 
 
 Docker image služby lze spustit s následující sadou proměnných
@@ -79,11 +85,11 @@ Pro běh není nutné vytvářet ručně jednotlivé kolekce. Komponenta Data wr
 
 Pro vytvoření databázové image a jejího spuštění  v lokálním prostředí stačí zadat následující příkazy : 
 
-```docker pull -t mongo:6.0```
-
-```docker run -d -p 27017:27017 mongo:6.0```
-
-Dokumentová databáze je poté dostupná na http://localhost:27017
+```
+docker pull -t mongo:6.0
+docker run -d -p 27017:27017 mongo:6.0
+```
+Dokumentová databáze je poté dostupná na [http://localhost:27017](http://localhost:27017)
 
 
 
