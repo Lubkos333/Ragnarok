@@ -19,6 +19,7 @@ Doporučené pořadí akcí pro deployment
 - Deploynout **DocumentApi** ze složky **Ragnarok-Data-App**
 - Deploynout **ChromaDB**
 - Deploynout **Ragnarok-RAG-App**
+- Provolat **Ragnarok-RAG-App** endpoint pro naplnění vektorové databáze
 - Deploynout **Ragnarok-UI**
 
 Pozn: README soubory v jednotlivých složkách ukazují způsob deploymentu jednotlivých komponent.
