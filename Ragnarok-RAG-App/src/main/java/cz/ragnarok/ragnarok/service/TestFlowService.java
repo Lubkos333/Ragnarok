@@ -39,7 +39,7 @@ public class TestFlowService {
         testDto.setDocuments(
                 docs.stream().map(
                 document -> DocumentsResponseDto.builder()
-                        .text(document.getContent())
+                        .text(document.getText())
                         .metadata(document.getMetadata())
                         .build()
                 ).toList()
@@ -68,7 +68,7 @@ public class TestFlowService {
         testDto.setDocuments(
                 docs.stream().map(
                         document -> DocumentsResponseDto.builder()
-                                .text(document.getContent())
+                                .text(document.getText())
                                 .metadata(document.getMetadata())
                                 .build()
                 ).toList()
@@ -107,7 +107,7 @@ public class TestFlowService {
         testDto.setDocuments(
                 docs.stream().map(
                         document -> DocumentsResponseDto.builder()
-                                .text(document.getContent())
+                                .text(document.getText())
                                 .metadata(document.getMetadata())
                                 .build()
                 ).toList()
@@ -122,7 +122,7 @@ public class TestFlowService {
         List<String> contents = docs
                 .stream()
                 .map(
-                        doc -> doc.getContent()
+                        doc -> doc.getText()
                 ).toList();
 
         return String.join("\n",

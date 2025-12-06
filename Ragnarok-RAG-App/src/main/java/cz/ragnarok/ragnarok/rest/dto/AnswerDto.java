@@ -14,4 +14,6 @@ public class AnswerDto {
     private String answer;
     private String paragraphs;
     private FlowType flow;
+    private String progressReport;
+    private Boolean answerReady;
 }

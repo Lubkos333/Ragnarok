@@ -54,67 +54,73 @@ public class SearchService {
         return avg;
     }
 
-
     public List<Document> search(String query, String legalQuery, Integer maxSize) throws Exception {
-        float[] qEmb = embedWithLegaleseAverage(query,legalQuery);
+        float[] qEmb = embedWithLegaleseAverage(query, legalQuery);
 
         ChromaDbQueryEntity resp = queryChroma(qEmb, maxSize * 3);
 
-        List<Document> chunks = new ArrayList<>();
+        List<EmbeddedDocument> chunks = new ArrayList<>();
+
         for (int i = 0; i < resp.getDocuments().get(0).size(); i++) {
             String text = resp.getDocuments().get(0).get(i);
             ChromaDbQueryEntity.Metadata m = resp.getMetadatas().get(0).get(i);
-            Map<String,Object> meta = new HashMap<>();
-            meta.put("paragraph",       m.getParagraph());
-            meta.put("head",            m.getHead());
-            meta.put("section",         m.getSection());
-            meta.put("title",           m.getTitle());
+
+            Map<String, Object> meta = new HashMap<>();
+            meta.put("paragraph", m.getParagraph());
+            meta.put("head", m.getHead());
+            meta.put("section", m.getSection());
+            meta.put("title", m.getTitle());
             meta.put("paragraphSubtitle", m.getParagraphSubtitle());
-            meta.put("part",            m.getPart());
-            meta.put("designation",     m.getDesignation());
-            meta.put("date",            m.getDate());
+            meta.put("part", m.getPart());
+            meta.put("designation", m.getDesignation());
+            meta.put("date", m.getDate());
 
             Document d = new Document(text, meta);
+
             List<Float> embList = resp.getEmbeddings().get(0).get(i);
             float[] embArr = new float[embList.size()];
             for (int j = 0; j < embArr.length; j++) embArr[j] = embList.get(j);
-            d.setEmbedding(embArr);
 
-            chunks.add(d);
+            chunks.add(new EmbeddedDocument(d, embArr));
         }
 
-        Map<String,Double> scoreByPara = new HashMap<>();
-        for (Document c : chunks) {
-            String pid = c.getMetadata().get("paragraph").toString();
-            float[] emb = (float[])c.getMetadata().getOrDefault("embedding", c.getEmbedding());
-            double sim = cosine(qEmb, emb);
+        Map<String, Double> scoreByPara = new HashMap<>();
+        for (EmbeddedDocument c : chunks) {
+            String pid = c.document().getMetadata().get("paragraph").toString();
+            double sim = cosine(qEmb, c.embedding());
             scoreByPara.merge(pid, sim, Double::sum);
         }
 
+
         List<String> topParas = scoreByPara.entrySet().stream()
-                .sorted(Map.Entry.<String,Double>comparingByValue().reversed())
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
                 .limit(maxSize)
                 .map(Map.Entry::getKey)
                 .toList();
 
-        Map<String,StringBuilder> textByPara = new LinkedHashMap<>();
-        Map<String,Map<String, Object>> metadata = new LinkedHashMap<>();
-        for (Document c : chunks) {
-            String pid = c.getMetadata().get("paragraph").toString();
+        Map<String, StringBuilder> textByPara = new LinkedHashMap<>();
+        Map<String, Map<String, Object>> metadata = new LinkedHashMap<>();
+
+        for (EmbeddedDocument c : chunks) {
+            String pid = c.document().getMetadata().get("paragraph").toString();
             if (!topParas.contains(pid)) continue;
-            textByPara.computeIfAbsent(pid, k->new StringBuilder())
-                    .append(c.getContent()).append("\n");
-            if(!metadata.containsKey(pid)){
-                metadata.put(pid, c.getMetadata());
-            }
+
+            textByPara.computeIfAbsent(pid, k -> new StringBuilder())
+                    .append(c.document().getText())
+                    .append("\n");
+
+            metadata.putIfAbsent(pid, c.document().getMetadata());
         }
 
         List<Document> results = new ArrayList<>();
         for (var entry : textByPara.entrySet()) {
             results.add(new Document(entry.getValue().toString(), metadata.get(entry.getKey())));
         }
+
         return results;
     }
+
+    public record EmbeddedDocument(Document document, float[] embedding) {}
 
     private ChromaDbQueryEntity queryChroma(float[] qEmb, int topK) throws Exception {
         String url = address + "/api/v1/collections/" + collectionId + "/query";

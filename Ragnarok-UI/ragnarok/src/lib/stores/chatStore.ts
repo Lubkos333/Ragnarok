@@ -20,6 +20,7 @@ interface ChatState {
   deleteChat: (id: string) => void;
   setActiveChat: (id: string | null) => void;
   sendMessage: (text: string, serverResponse?: boolean) => void;
+  completeMessage: (completed: boolean) => void;
 }
 
 export const useChatStore = create(
@@ -67,6 +68,7 @@ export const useChatStore = create(
           sender: !serverResponse ? "user" : "ragnarok",
           text: text,
           timestamp: Date.now(),
+          completed: false
         };
 
         set({
@@ -75,6 +77,26 @@ export const useChatStore = create(
               ? {
                   ...chat,
                   messages: [...chat.messages, newMessage],
+                  lastUpdated: Date.now(),
+                }
+              : chat
+          ),
+        });
+      },
+      completeMessage: (completed) => {
+        const { activeChatId, chats } = get();
+        if (!activeChatId) return;
+
+        set({
+          chats: chats.map((chat) =>
+            chat.id === activeChatId
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((msg, index) =>
+                    index === chat.messages.length - 1 && msg.sender === "ragnarok"
+                      ? { ...msg, completed }
+                      : msg
+                  ),
                   lastUpdated: Date.now(),
                 }
               : chat

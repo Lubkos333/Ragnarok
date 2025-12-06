@@ -91,16 +91,17 @@ public class VectorDBService {
         metadata.put("designation",designation);
         metadata.put("date", date.format(DateTimeFormatter.ISO_LOCAL_DATE));
         Document doc = new Document(chunk.getContent(), metadata);
-        doc.setEmbedding(embeddingModel.embed(doc));
+        //doc.setEmbedding(embeddingModel.embed(doc));
         return doc;
     }
 
     public List<Document> search(String query, Integer numberOfParagraphs) {
         return vectorStore.similaritySearch(
-                SearchRequest.defaults()
-                        .withTopK(numberOfParagraphs)
-                        .withQuery(query)
-                        .withSimilarityThreshold(0.5)
+                SearchRequest.builder()
+                        .query(query)
+                        .topK(numberOfParagraphs)
+                        .similarityThreshold(0.5)
+                        .build()
         );
     }
 
