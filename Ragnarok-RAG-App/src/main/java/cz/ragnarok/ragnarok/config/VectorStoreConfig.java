@@ -1,8 +1,8 @@
 package cz.ragnarok.ragnarok.config;
 
-import org.springframework.ai.chroma.ChromaApi;
+import org.springframework.ai.chroma.vectorstore.ChromaApi;
+import org.springframework.ai.chroma.vectorstore.ChromaVectorStore;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.ChromaVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +31,7 @@ public class VectorStoreConfig {
 
     @Bean(name = "chromaDb")
     public VectorStore chromaVectorStore(EmbeddingModel embeddingModel, ChromaApi chromaApi) {
-        return new ChromaVectorStore(embeddingModel, chromaApi, collectionName, true);
+        return ChromaVectorStore.builder(chromaApi, embeddingModel).collectionName(collectionName).build();
     }
 
 }

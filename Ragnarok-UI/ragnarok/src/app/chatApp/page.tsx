@@ -5,11 +5,11 @@ import { useChatStore } from "@/lib/stores/chatStore";
 import { ChatWindow } from "@/components/chat/chat-window";
 import { OnboardingModal } from "@/components/chat/onboarding-modal";
 import { useOnboardingStore } from "@/lib/stores/onBoardingStore";
-import { chatApi, MessageDto } from "@/services/api/chatApi";
+import { AnswerDto, chatApi, MessageDto } from "@/services/api/chatApi";
 import { ChatWebSocket } from "@/services/websocket";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const commonQuestions = [
   "Jak se dědí, když někdo nemá závěť?",
@@ -35,6 +35,7 @@ const ChatApp = () => {
   const setIsTyping = useChatStore((state) => state.setIsTyping);
   const ws = ChatWebSocket.getInstance();
   const isConnected = useChatStore((state) => state.isConnected);
+  const [progressReport, setProgressReport] = useState("");
 
   useEffect(() => {
     if(!isConnected && isTyping) {
@@ -47,6 +48,26 @@ const ChatApp = () => {
       setIsTyping(false);
     }
   }, [isConnected, isTyping, setIsTyping])
+
+  useEffect(() => {
+    ws.onMessage((raw) => {
+      try {
+        const data: AnswerDto = JSON.parse(raw);
+
+        if (!data.answerReady) {
+          setProgressReport(data.progressReport);
+          setIsTyping(true);
+        } else {
+          setProgressReport("");
+          sendMessage(JSON.stringify(data), true);
+          setIsTyping(false);
+        }
+
+      } catch (e) {
+        console.error("Neplatná zpráva z websocketu", e);
+      }
+    });
+  }, [sendMessage, setIsTyping, ws]);
 
   return (
     <div className="flex-1 flex flex-col w-full bg-muted">
@@ -81,9 +102,12 @@ const ChatApp = () => {
                     numberOfParagraphs: numberOfParagraphs
                   }
                   setIsTyping(true);
+                    setProgressReport("Zpracovávám dotaz...");
+                    await chatApi(ws, messageDto);
+                  /*setIsTyping(true);
                   chatApi(ws ,messageDto).then((response) => {
                     sendMessage(response.response, true);
-                  }).then(() => setIsTyping(false));
+                  }).then(() => setIsTyping(false));*/
                 }}
               }}
             />
@@ -111,11 +135,17 @@ const ChatApp = () => {
                       flowType: flow,
                       numberOfParagraphs: numberOfParagraphs,
                     }
+
+                    setIsTyping(true);
+                    setProgressReport("Zpracovávám dotaz...");
+                    await chatApi(ws, messageDto);
+                    /*
                     setIsTyping(true);
                     chatApi(ws, messageDto).then((response) => {
                       sendMessage(response.response, true);
                     })
                     .then(() => setIsTyping(false));
+                    */
                   }}}
                 >
                   <CardHeader>
@@ -126,7 +156,7 @@ const ChatApp = () => {
             </div>
           </div>
         ) : (
-          <ChatWindow ws={ws} isTyping={isTyping} setIsTyping={setIsTyping} />
+          <ChatWindow ws={ws} isTyping={isTyping} setIsTyping={setIsTyping} progressReport={progressReport} setProgressReport={setProgressReport}/>
         )}
         <Toaster />
       </main>

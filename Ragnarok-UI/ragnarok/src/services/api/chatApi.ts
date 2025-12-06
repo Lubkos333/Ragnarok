@@ -12,8 +12,15 @@ export interface AnswerDto {
   answer: string;
   paragraphs: string;
   flow: FlowType;
+  progressReport: string;
+  answerReady: boolean;
 }
 
+export const chatApi = async (ws: ChatWebSocket, message: MessageDto) => {
+  ws.sendMessage(JSON.stringify(message));
+};
+
+/*
 export const chatApi = async (ws: ChatWebSocket,message: MessageDto): Promise<{ response: string }> => {
 
   return new Promise((resolve, reject) => {
@@ -32,6 +39,7 @@ export const chatApi = async (ws: ChatWebSocket,message: MessageDto): Promise<{ 
     }
   });
 };
+*/
 
 export const mockChatApi = async (
   message: string

@@ -4,26 +4,27 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from "lucide-react";
 import { AnswerDto, chatApi, MessageDto } from "@/services/api/chatApi";
-import { useChatStore } from "@/lib/stores/chatStore";
+import { chatStore, useChatStore } from "@/lib/stores/chatStore";
 import { ChatWebSocket } from "@/services/websocket";
 import { CiteMessage } from "./cite-message";
 import { UsedFlow } from "./used-flow";
-
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
 import { toast } from "sonner";
+import { LoadingBubble } from "./loadingBubble";
+import { Typewriter } from "./typewriter";
 
 
 export interface ChatWindowProps {
   ws: ChatWebSocket;
   isTyping: boolean;
-
   setIsTyping: (isTyping: boolean) => void;
-
+  progressReport: string;
+  setProgressReport: (progressReport: string) => void;
 }
 
 export function ChatWindow(props: ChatWindowProps) {
-  const { ws, isTyping, setIsTyping } = props;
+  const { ws, isTyping, setIsTyping, progressReport, setProgressReport} = props;
   const [input, setInput] = useState("");
   const sendMessage = useChatStore((state) => state.sendMessage);
   const chats = useChatStore((state) => state.chats);
@@ -31,10 +32,10 @@ export function ChatWindow(props: ChatWindowProps) {
   const activeChatId = useChatStore((state) => state.activeChatId);
   const numberOfParagraphs = useChatStore((state) => state.numberOfParagraphs);
   const isConnected = useChatStore((state) => state.isConnected);
-
   const currentChat = chats.find((chat) => chat.id === activeChatId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
 
     if(!isTyping) {
       e.preventDefault();
@@ -55,12 +56,9 @@ export function ChatWindow(props: ChatWindowProps) {
             flowType: flow,
             numberOfParagraphs: numberOfParagraphs
           }
-        
-          chatApi(ws, messageDto).then((response) => {
-            setInput("");
-            setIsTyping(false);
-            sendMessage(response.response, true);
-          })
+          setIsTyping(true);
+          setProgressReport("Zpracovávám dotaz...");
+          await chatApi(ws, messageDto);
         }
       }
     }
@@ -98,9 +96,17 @@ export function ChatWindow(props: ChatWindowProps) {
                       }
                     `}
                   </style>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {(JSON.parse(message.text) as AnswerDto).answer}
-                </ReactMarkdown>
+                  {message.completed ? <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {(JSON.parse(message.text) as AnswerDto).answer}
+                    </ReactMarkdown>:
+                    <Typewriter 
+                      text={(JSON.parse(message.text) as AnswerDto).answer} 
+                      speed={1}
+                      animateOnce={true}
+                      onFinished={() => {
+                        chatStore.getState().completeMessage(true);
+                      }} 
+                    />}
               </div>
             }
             </div>
@@ -113,10 +119,8 @@ export function ChatWindow(props: ChatWindowProps) {
           </div>
         ))}
         {isTyping && (
-          <div className="text-left mb-4">
-            <div className="inline-block p-2 rounded-lg bg-muted">
-              AI is typing...
-            </div>
+          <div className="mb-4">
+            <LoadingBubble text={progressReport} />
           </div>
         )}
       </ScrollArea>

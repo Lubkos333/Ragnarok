@@ -9,12 +9,15 @@ export class ChatWebSocket {
   private isSocketOpen = false;
 
   private constructor() {
-    this.socket = new WebSocket(`ws://${process.env.NEXT_PUBLIC_RAGNAROK_UI_URL}/ws/chat`);
+    const url = `wss://ragnarok-be.dyn.cloud.e-infra.cz/ws/chat`;
+    console.log("Connecting to WebSocket:", url);
+
+    this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
-      console.log("WebSocket connected");
+      console.log("✅ WebSocket connected");
       this.isSocketOpen = true;
-      ChatWebSocket.isReconnecting = false; 
+      ChatWebSocket.isReconnecting = false;
       chatStore.getState().setIsconnected(true);
 
       this.messageQueue.forEach((msg) => this.socket.send(msg));
@@ -22,8 +25,7 @@ export class ChatWebSocket {
     };
 
     this.socket.onclose = () => {
-      console.log("WebSocket disconnected");
-
+      console.log("❌ WebSocket disconnected");
       this.isSocketOpen = false;
       chatStore.getState().setIsconnected(false);
 
@@ -31,26 +33,19 @@ export class ChatWebSocket {
         ChatWebSocket.isReconnecting = true;
         setTimeout(() => {
           ChatWebSocket.instance = null;
-          ChatWebSocket.getInstance(); 
-        }, 2500); 
+          ChatWebSocket.getInstance();
+        }, 2500);
       }
     };
 
     this.socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("⚠️ WebSocket error:", error);
     };
   }
 
   static getInstance(): ChatWebSocket {
     if (!ChatWebSocket.instance) {
       ChatWebSocket.instance = new ChatWebSocket();
-    } else {
-      const state = ChatWebSocket.instance.socket.readyState;
-      if (state !== WebSocket.OPEN && state !== WebSocket.CONNECTING) {
-        console.warn("WebSocket not open, reconnecting...");
-        ChatWebSocket.instance.closeWS();
-        ChatWebSocket.instance = new ChatWebSocket();
-      }
     }
     return ChatWebSocket.instance;
   }
@@ -64,14 +59,9 @@ export class ChatWebSocket {
     }
   }
 
-  closeWS() {
-    if (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING) {
-      this.socket.close();
-    }
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onMessage(callback: (data: any) => void) {
     this.socket.onmessage = (event) => callback(event.data);
   }
+
 }
